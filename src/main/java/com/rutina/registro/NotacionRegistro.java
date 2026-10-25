@@ -2,13 +2,20 @@ package com.rutina.registro;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Clase utilitaria para parsear la notación de registro de sesiones.
+ * Lee lo que el usuario escribió en una casilla del registro (ej. {@code 3.3-85.3-80}).
+ * El punto separa series, el guion marca el kg de esa serie y los decimales del kg van con coma.
  */
 public final class NotacionRegistro {
 
-    private NotacionRegistro() { }
+    /** reps 1..99 sin ceros a la izquierda, kg opcional con decimales con coma. */
+    private static final Pattern SERIE = Pattern.compile("([1-9][0-9]?)(?:-([0-9]+(?:,[0-9]+)?))?");
+
+    private NotacionRegistro() {
+    }
 
     /**
      * @param texto        lo que escribió el usuario; no puede ser vacío (vacío = "como lo planificado", lo resuelve quien llama)
@@ -17,93 +24,30 @@ public final class NotacionRegistro {
      * @throws IllegalArgumentException si el texto no cumple la gramática; el mensaje dice qué está mal
      */
     public static List<SerieReal> parse(String texto, List<SerieReal> planificadas) {
-        if (texto == null || texto.isEmpty()) {
-            throw new IllegalArgumentException("El texto no puede ser nulo ni vacío.");
-        }
+        if (texto == null) throw new IllegalArgumentException("casilla vacía");
+        String t = texto.replaceAll("\\s+", "");
+        if (t.isEmpty()) throw new IllegalArgumentException("casilla vacía");
+        if (t.equals("0")) return List.of();
 
-        // Paso 1: Normalizar espacios
-        String normalizado = texto.replaceAll("\\s+", "");
-
-        // Paso 2: Validar caso especial "0"
-        if (normalizado.equals("0")) {
-            return List.of();
-        }
-
-        // Paso 3: Separar por puntos
-        String[] partes = normalizado.split("\\.");
-
-        // Paso 4: Procesar cada parte
-        List<SerieReal> resultado = new ArrayList<>();
-        int indicePlanificado = 0;
-
+        String[] partes = t.split("\\.", -1);
+        List<SerieReal> res = new ArrayList<>();
         for (int i = 0; i < partes.length; i++) {
-            String parte = partes[i];
-
-            // Validar que la parte no esté vacía (ej: "3..3", ".3", "3.")
-            if (parte.isEmpty()) {
-                throw new IllegalArgumentException("Formato inválido: series separadas por puntos consecutivos o punto inicial/final.");
-            }
-
-            // Separar reps y kg si existe
-            String repsStr;
-            String kgStr = null;
-
-            int dashIndex = parte.indexOf('-');
-            if (dashIndex != -1) {
-                repsStr = parte.substring(0, dashIndex);
-                kgStr = parte.substring(dashIndex + 1);
+            String p = partes[i];
+            if (p.isEmpty()) throw new IllegalArgumentException("falta una serie entre puntos en \"" + texto + "\"");
+            Matcher m = SERIE.matcher(p);
+            if (!m.matches()) throw new IllegalArgumentException("serie inválida: \"" + p + "\" (reps de 1 a 99, kg con coma)");
+            int reps = Integer.parseInt(m.group(1));
+            double kg;
+            if (m.group(2) != null) {
+                kg = Double.parseDouble(m.group(2).replace(',', '.'));
+                if (kg <= 0) throw new IllegalArgumentException("el kg tiene que ser mayor que 0: \"" + p + "\"");
             } else {
-                repsStr = parte;
+                if (planificadas.isEmpty()) throw new IllegalArgumentException("indicá el peso de la serie \"" + p + "\"");
+                kg = planificadas.get(Math.min(i, planificadas.size() - 1)).kg();
             }
-
-            // Validar reps: solo dígitos y entre 1 y 99
-            if (!repsStr.matches("\\d+")) {
-                throw new IllegalArgumentException("Formato inválido en la serie " + (i + 1) + ": repeticiones deben ser un número entero.");
-            }
-
-            int reps = Integer.parseInt(repsStr);
-            if (reps < 1 || reps > 99) {
-                throw new IllegalArgumentException("Formato inválido en la serie " + (i + 1) + ": repeticiones deben estar entre 1 y 99.");
-            }
-
-            // Validar kg si fue proporcionado
-            if (kgStr != null) {
-                if (kgStr.isEmpty()) {
-                    throw new IllegalArgumentException("Formato inválido en la serie " + (i + 1) + ": peso no puede estar vacío después del guion.");
-                }
-
-                // Validar que el peso tenga formato numérico correcto (dígitos y opcionalmente coma para decimales)
-                if (!kgStr.matches("\\d+(,\\d+)?")) {
-                    throw new IllegalArgumentException("Formato inválido en la serie " + (i + 1) + ": el peso debe ser un número con decimales usando coma.");
-                }
-
-                // Convertir de coma a punto para parsear como double
-                String kgConPunto = kgStr.replace(',', '.');
-                double kg = Double.parseDouble(kgConPunto);
-
-                if (kg <= 0) {
-                    throw new IllegalArgumentException("Formato inválido en la serie " + (i + 1) + ": el peso debe ser mayor a 0.");
-                }
-            } else {
-                // No hay peso especificado, buscarlo en las planificadas
-                if (indicePlanificado >= planificadas.size()) {
-                    // Usar el de la última planificada si existen
-                    SerieReal ultima = planificadas.get(planificadas.size() - 1);
-                    resultado.add(new SerieReal(reps, ultima.kg()));
-                } else {
-                    // Usar el de la posición actual
-                    SerieReal planificada = planificadas.get(indicePlanificado);
-                    resultado.add(new SerieReal(reps, planificada.kg()));
-                    indicePlanificado++;
-                }
-            }
-
-            // Validar que no se acaben las planificadas antes de tiempo si el usuario no especificó peso
-            // Nota: La lógica anterior ya maneja esto, pero aseguramos que si hay más series que planificadas y ninguna tiene peso,
-            // usamos la última. Si todas tienen peso explícito, no importa.
+            res.add(new SerieReal(reps, kg));
         }
-
-        return resultado;
+        return res;
     }
 
     /** true si parse no lanzaría excepción. */
