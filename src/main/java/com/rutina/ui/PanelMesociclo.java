@@ -7,6 +7,14 @@ import com.rutina.model.Mesociclo;
 import com.rutina.model.Tipo;
 import com.rutina.model.Zona;
 import com.rutina.pdf.ExportadorPdf;
+import com.rutina.registro.AnalisisRegistro;
+import com.rutina.registro.ArmadorPlan;
+import com.rutina.registro.ComparacionTipo;
+import com.rutina.registro.EscalaDescanso;
+import com.rutina.registro.EscalaFinal;
+import com.rutina.registro.JsonRegistro;
+import com.rutina.registro.RegistroCelular;
+import com.rutina.registro.ResumenSesion;
 import com.rutina.service.Armado;
 import com.rutina.service.calculo.CalculadoraMesociclo;
 import com.rutina.service.calculo.GeneradorSeries;
@@ -52,8 +60,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-/** Pestaña Mesociclo: grilla de días y ejercicios, series calculadas, contadores, gráfico y exportación. */
+/** Pestaña Mesociclo: grilla de días y ejercicios, series calculadas, contadores, gráfico, registro y exportación. */
 final class PanelMesociclo extends JPanel {
 
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -71,6 +80,15 @@ final class PanelMesociclo extends JPanel {
         }
     };
     private final JPanel grafico = new JPanel(new BorderLayout());
+    /** Planilla (lo planificado) contra Entrenado (lo anotado en el celular), una fila por sesión y tipo. */
+    private final DefaultTableModel registro = new DefaultTableModel(
+            new Object[]{"Micro", "Día", "Fecha", "Descanso", "Final", "Esfuerzo", "Tipo", "Vol planilla",
+                    "Vol entrenado", "IMR planilla", "IMR entrenado"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return false;
+        }
+    };
     private final JPanel pliometria = new JPanel();
     private final JTextArea calentamiento = new JTextArea(3, 30);
     private final JTextArea auxiliares = new JTextArea(3, 30);
@@ -97,7 +115,15 @@ final class PanelMesociclo extends JPanel {
         exportar.addActionListener(e -> exportar());
         JButton recalcular = new JButton("Recalcular con 1RM actuales");
         recalcular.addActionListener(e -> recalcularRm());
+        JButton alCelular = new JButton("Plan al celular");
+        alCelular.setToolTipText("Guarda el plan en un archivo .json para cargarlo en la app del celular");
+        alCelular.addActionListener(e -> planAlCelular());
+        JButton importar = new JButton("Importar registro");
+        importar.setToolTipText("Lee el registro exportado desde el celular y lo compara con la planilla");
+        importar.addActionListener(e -> importarRegistro());
         arriba.add(exportar);
+        arriba.add(alCelular);
+        arriba.add(importar);
         arriba.add(recalcular);
         add(arriba, BorderLayout.NORTH);
 
@@ -114,6 +140,12 @@ final class PanelMesociclo extends JPanel {
         JTabbedPane derecha = new JTabbedPane();
         derecha.addTab("Contadores", new JScrollPane(new JTable(contadores)));
         derecha.addTab("Gráfico", grafico);
+        JTable tablaRegistro = new JTable(registro);
+        tablaRegistro.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        tablaRegistro.getColumnModel().getColumn(3).setPreferredWidth(220);
+        tablaRegistro.getColumnModel().getColumn(4).setPreferredWidth(110);
+        tablaRegistro.getColumnModel().getColumn(2).setPreferredWidth(90);
+        derecha.addTab("Registro", new JScrollPane(tablaRegistro));
         pliometria.setLayout(new BoxLayout(pliometria, BoxLayout.Y_AXIS));
         JPanel envolturaPlio = new JPanel(new BorderLayout());
         envolturaPlio.add(pliometria, BorderLayout.NORTH);
@@ -231,8 +263,37 @@ final class PanelMesociclo extends JPanel {
         }
         grafico.revalidate();
         grafico.repaint();
+        llenarRegistro();
         dibujarPliometria();
         dibujarGrilla();
+    }
+
+    /** Planilla vs entrenado del último registro importado; si el registro no cuadra con el plan, el motivo va a avisos. */
+    private void llenarRegistro() {
+        registro.setRowCount(0);
+        if (actual == null || resultado == null) return;
+        try {
+            Optional<RegistroCelular> guardado = ctx.registros.cargar(actual.id());
+            if (guardado.isEmpty()) return;
+            var plan = ArmadorPlan.armar(ctx.perfil.nombre(), actual, resultado, ctx.metodologia());
+            for (ResumenSesion s : AnalisisRegistro.analizar(plan, guardado.get())) {
+                for (ComparacionTipo c : s.porTipo()) {
+                    registro.addRow(new Object[]{s.microciclo(), s.dia(), s.fecha(),
+                            s.descanso() == null ? "" : s.descanso() + " · " + EscalaDescanso.deValor(s.descanso()).texto(),
+                            s.sensacionFinal() == null ? "" : s.sensacionFinal() + " · " + EscalaFinal.deValor(s.sensacionFinal()).texto(),
+                            decimal(s.esfuerzoPromedio()), PanelEjercicios.titulo(c.tipo()), c.volumenPlan(), c.volumenReal(),
+                            decimal(c.imrPlan()), decimal(c.imrReal())});
+                }
+            }
+        } catch (Exception e) {
+            registro.setRowCount(0);
+            avisos.setText(" ⚠ Registro: " + e.getMessage());
+        }
+    }
+
+    /** Un decimal con coma; null = celda vacía. */
+    private static String decimal(Double v) {
+        return v == null ? "" : String.format("%.1f", v).replace('.', ',');
     }
 
     /** Planes de pliometría que caen en las fechas del mesociclo (se planifican en Macrociclo). */
@@ -557,6 +618,56 @@ final class PanelMesociclo extends JPanel {
                     + "\n¿Abrirlo?", "Exportado", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
                 Desktop.getDesktop().open(destino.toFile());
             }
+        } catch (Exception e) {
+            Contexto.error(this, e);
+        }
+    }
+
+    /** Carpeta donde arrancan los diálogos de archivos: ~/Documentos si existe, si no la carpeta personal. */
+    private static File carpetaInicial() {
+        File documentos = new File(System.getProperty("user.home"), "Documentos");
+        return documentos.isDirectory() ? documentos : new File(System.getProperty("user.home"));
+    }
+
+    private void planAlCelular() {
+        if (resultado == null) {
+            JOptionPane.showMessageDialog(this, "El mesociclo todavía no se puede calcular");
+            return;
+        }
+        JFileChooser fc = new JFileChooser();
+        fc.setCurrentDirectory(carpetaInicial());
+        String perfil = ctx.perfil.nombre().replaceAll("[\\\\/:*?\"<>|]", "_");
+        fc.setSelectedFile(new File(fc.getCurrentDirectory(), "plan-" + perfil + "-" + actual.inicio() + ".json"));
+        if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        Path destino = fc.getSelectedFile().toPath();
+        if (!destino.toString().toLowerCase().endsWith(".json")) destino = Path.of(destino + ".json");
+        try {
+            JsonRegistro.escribirPlan(destino, ArmadorPlan.armar(ctx.perfil.nombre(), actual, resultado, ctx.metodologia()));
+            JOptionPane.showMessageDialog(this, "Plan guardado en " + destino
+                    + "\nPasalo al celular y cargalo en la app (Inicio → Cargar plan).");
+        } catch (Exception e) {
+            Contexto.error(this, e);
+        }
+    }
+
+    private void importarRegistro() {
+        if (actual == null) {
+            JOptionPane.showMessageDialog(this, "Elegí primero el mesociclo del registro.");
+            return;
+        }
+        JFileChooser fc = new JFileChooser();
+        fc.setCurrentDirectory(carpetaInicial());
+        if (fc.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        try {
+            RegistroCelular r = JsonRegistro.leerRegistro(fc.getSelectedFile().toPath());
+            if (r.mesocicloId() != actual.id()) {
+                JOptionPane.showMessageDialog(this, "El registro es de otro mesociclo (id " + r.mesocicloId()
+                                + "; el elegido es el " + actual.id() + "). No se guardó.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            ctx.registros.guardar(r);
+            // se redibuja después, como en guardar(): no se destruyen componentes en medio de su evento
+            SwingUtilities.invokeLater(this::recalcular);
         } catch (Exception e) {
             Contexto.error(this, e);
         }

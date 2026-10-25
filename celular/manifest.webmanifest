@@ -1,0 +1,14 @@
+{
+  "name": "RUTINEITOR Registro",
+  "short_name": "Rutineitor",
+  "description": "Registro de sesiones de entrenamiento, sin conexión.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f5f7",
+  "theme_color": "#1f6feb",
+  "icons": [
+    { "src": "icono.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
