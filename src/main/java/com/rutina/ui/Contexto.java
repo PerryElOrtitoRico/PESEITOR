@@ -8,6 +8,7 @@ import com.rutina.service.datos.EjercicioRepo;
 import com.rutina.service.datos.MesocicloRepo;
 import com.rutina.service.datos.MetodologiaRepo;
 import com.rutina.service.datos.PlanPlioRepo;
+import com.rutina.service.datos.RegistroRepo;
 
 import javax.swing.JOptionPane;
 import java.awt.Component;
@@ -26,6 +27,7 @@ public final class Contexto {
     final MesocicloRepo mesociclos;
     final PlanPlioRepo planes;
     final MetodologiaRepo metodologiaRepo;
+    final RegistroRepo registros;
     private Metodologia metodologia;
     private final List<Runnable> oyentes = new ArrayList<>();
 
@@ -36,6 +38,7 @@ public final class Contexto {
         this.mesociclos = new MesocicloRepo(db);
         this.planes = new PlanPlioRepo(db);
         this.metodologiaRepo = new MetodologiaRepo(db);
+        this.registros = new RegistroRepo(db);
         this.metodologia = metodologiaRepo.cargar();
     }
 
