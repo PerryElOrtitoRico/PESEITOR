@@ -35,6 +35,7 @@ public final class Database implements AutoCloseable {
                     + " bloques_json TEXT, calentamiento TEXT, auxiliares TEXT, rm_json TEXT)",
             "CREATE TABLE IF NOT EXISTS plan_pliometria (id INTEGER PRIMARY KEY AUTOINCREMENT,"
                     + " perfil_id INTEGER NOT NULL, nivel INTEGER NOT NULL, inicio TEXT NOT NULL)",
+            "CREATE TABLE IF NOT EXISTS registro (mesociclo_id INTEGER PRIMARY KEY, json TEXT NOT NULL, importado TEXT NOT NULL)",
     };
 
     private final Connection conexion;
