@@ -1,9 +1,11 @@
-GENERADOR DE RUTINAS
+RUTINEITOR para Windows
 
-1. Descomprimir esta carpeta donde quieras (por ejemplo en Documentos).
-2. Doble click en "Abrir Generador de rutinas.bat".
+1. Descargar RUTINEITOR-windows.zip (boton "View raw" / "Download").
+2. Descomprimirlo donde quieras (por ejemplo en Documentos).
+3. Doble click en "Abrir RUTINEITOR.bat".
    Si Windows avisa que el archivo no es de confianza: "Mas informacion" -> "Ejecutar de todas formas".
-3. La primera vez pide un nombre y crea el perfil.
+4. La primera vez pide un nombre y crea el perfil.
 
 No hace falta instalar Java: viene incluido en la carpeta "jre".
-Los datos se guardan en C:\Users\<usuario>\.local\share\rutina\rutina.db
+
+App del celular: https://perryelortitorico.github.io/RUTINEITOR/
