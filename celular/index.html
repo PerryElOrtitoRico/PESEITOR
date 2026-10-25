@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RUTINEITOR · Registro</title>
+<style>
+  :root {
+    --fondo: #f4f5f7; --tarjeta: #fff; --texto: #1d1f23; --suave: #6b7078; --borde: #cfd3da;
+    --acento: #1f6feb; --error: #c62828; --ok: #1a7f37;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--fondo); color: var(--texto);
+    font: 17px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 12px 12px 48px; }
+  h1 { font-size: 1.35em; margin: 4px 0 12px; }
+  h2 { font-size: 1.15em; margin: 0; }
+  .tarjeta { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 10px; padding: 12px; margin: 10px 0; }
+  .aviso { background: #fff4e5; border: 1px solid #f0b46c; border-radius: 8px; padding: 10px; margin: 8px 0; }
+  .aviso.error { background: #fdecea; border-color: #e7a3a0; color: var(--error); }
+  .oculto { display: none !important; }
+  label.campo { display: block; margin: 8px 0 4px; font-weight: 600; }
+  select, input[type=text], button, .boton-archivo {
+    font: inherit; width: 100%; min-height: 44px; border-radius: 8px; border: 1px solid var(--borde);
+    padding: 8px 10px; background: #fff; color: var(--texto);
+  }
+  button, .boton-archivo { cursor: pointer; background: #e9ecf1; font-weight: 600; text-align: center; margin: 6px 0; }
+  button.principal, .boton-archivo { background: var(--acento); color: #fff; border-color: var(--acento); }
+  button.peligro { background: #fff; color: var(--error); border-color: #e7a3a0; }
+  .boton-archivo { display: block; }
+  .boton-archivo input { display: none; }
+  .fila-2 { display: flex; gap: 8px; }
+  .fila-2 > * { flex: 1 1 0; min-width: 0; }
+  .encabezado { display: flex; align-items: center; gap: 8px; }
+  .encabezado h2 { flex: 1 1 auto; min-width: 0; }
+  .encabezado button { width: auto; flex: 0 0 auto; margin: 0; }
+  .suave { color: var(--suave); font-size: 0.92em; }
+  .ejercicio h3 { font-size: 1.05em; margin: 0 0 6px; overflow-wrap: anywhere; }
+  .fila-registro { display: flex; align-items: flex-start; gap: 8px; margin: 8px 0; }
+  .fila-registro .etiqueta { flex: 0 0 4.6em; padding-top: 10px; font-weight: 600; overflow-wrap: anywhere; }
+  .fila-registro .casilla { flex: 1 1 auto; min-width: 0; }
+  input.invalido { border: 2px solid var(--error); }
+  .mensaje { font-size: 0.9em; margin-top: 3px; }
+  .mensaje.error { color: var(--error); }
+  .mensaje.ojo { color: var(--suave); }
+</style>
+</head>
+<body>
+<main>
+  <div id="aviso-almacen" class="aviso oculto">No se pueden guardar datos en este navegador.</div>
+
+  <!-- ===== Inicio ===== -->
+  <section id="inicio">
+    <h1>RUTINEITOR · Registro</h1>
+    <div id="error-inicio" class="aviso error oculto"></div>
+
+    <label class="boton-archivo">Cargar plan
+      <input id="archivo-plan" type="file" accept=".json,application/json">
+    </label>
+
+    <div id="sin-plan" class="tarjeta">
+      Cargá el archivo <b>plan-….json</b> que exportó el programa de la PC (botón "Plan al celular").
+    </div>
+
+    <div id="con-plan" class="oculto">
+      <div id="caja-elegir-plan" class="oculto">
+        <label class="campo" for="plan-activo">Plan</label>
+        <select id="plan-activo"></select>
+      </div>
+      <div class="tarjeta">
+        <div class="fila-2">
+          <div>
+            <label class="campo" for="microciclo">Microciclo</label>
+            <select id="microciclo"></select>
+          </div>
+          <div>
+            <label class="campo" for="dia">Día</label>
+            <select id="dia"></select>
+          </div>
+        </div>
+        <button id="abrir-sesion" class="principal">Abrir sesión</button>
+        <p id="resumen" class="suave"></p>
+      </div>
+      <button id="exportar">Exportar registro</button>
+      <button id="borrar-plan" class="peligro">Borrar este plan</button>
+    </div>
+  </section>
+
+  <!-- ===== Sesión ===== -->
+  <section id="sesion" class="oculto">
+    <div class="encabezado">
+      <h2 id="titulo-sesion"></h2>
+      <button id="volver">← Volver</button>
+    </div>
+    <p id="fecha-sesion" class="suave"></p>
+
+    <div class="tarjeta">
+      <label class="campo" for="descanso">Descanso previo</label>
+      <select id="descanso" data-escala="descanso"></select>
+    </div>
+
+    <div id="ejercicios"></div>
+
+    <div class="tarjeta">
+      <label class="campo" for="final">Sensación al terminar</label>
+      <select id="final" data-escala="final"></select>
+    </div>
+
+    <button id="borrar-sesion" class="peligro">Borrar lo anotado en esta sesión</button>
+  </section>
+</main>
+
+<script src="logica.js"></script>
+<script>
+"use strict";
+
+// ---- Escalas (texto exacto de la sección 2 de la especificación) ----
+const ESCALAS = {
+  descanso: [[6, "Bien descansado y con ganas de entrenar"], [5, "Bien descansado"], [4, "Bien descansado pero distraído"],
+             [3, "Mal descansado pero con ganas de entrenar"], [2, "Mal descansado"], [1, "Mal descansado y sin ganas de entrenar"]],
+  esfuerzo: [[1, "Muy liviano"], [2, "Liviano"], [3, "Justo"], [4, "Pesado"], [5, "Al límite"]],
+  final: [[1, "Destruido"], [2, "Cansado"], [3, "Normal"], [4, "Bien"], [5, "Con energía"]],
+};
+
+const CLAVE_PLANES = "rutineitor.planes";
+const CLAVE_REGISTROS = "rutineitor.registros";
+const CLAVE_ACTIVO = "rutineitor.activo";
+
+const $ = id => document.getElementById(id);
+
+// ---- localStorage (siempre dentro de try/catch) ----
+function avisarAlmacen() { $("aviso-almacen").classList.remove("oculto"); }
+
+function leer(clave, defecto) {
+  try {
+    const texto = localStorage.getItem(clave);
+    return texto === null ? defecto : JSON.parse(texto);
+  } catch (e) {
+    avisarAlmacen();
+    return defecto;
+  }
+}
+
+function escribir(clave, valor) {
+  try {
+    localStorage.setItem(clave, JSON.stringify(valor));
+    return true;
+  } catch (e) {
+    avisarAlmacen();
+    return false;
+  }
+}
+
+function leerActivo() {
+  try { return localStorage.getItem(CLAVE_ACTIVO); } catch (e) { avisarAlmacen(); return null; }
+}
+
+function escribirActivo(id) {
+  try {
+    if (id === null) localStorage.removeItem(CLAVE_ACTIVO); else localStorage.setItem(CLAVE_ACTIVO, String(id));
+  } catch (e) { avisarAlmacen(); }
+}
+
+// ---- Estado ----
+let planes = leer(CLAVE_PLANES, {});
+let registros = leer(CLAVE_REGISTROS, {});
+let activo = leerActivo();
+/** Sesión abierta en pantalla: { microciclo, dia } o null. */
+let abierta = null;
+
+function planActivo() { return activo !== null && planes[activo] ? planes[activo] : null; }
+
+function registroActivo() {
+  const plan = planActivo();
+  if (!plan) return null;
+  return registros[activo] || Logica.registroVacio(plan);
+}
+
+function hoy() {
+  const d = new Date();
+  const dos = n => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + dos(d.getMonth() + 1) + "-" + dos(d.getDate());
+}
+
+function fechaLinda(iso) {
+  const p = String(iso || "").split("-");
+  return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : String(iso || "");
+}
+
+function opcion(valor, texto) {
+  const o = document.createElement("option");
+  o.value = valor;
+  o.textContent = texto;
+  return o;
+}
+
+function llenarEscala(select, escala) {
+  select.replaceChildren(opcion("", "—"));
+  for (const [valor, texto] of ESCALAS[escala]) select.appendChild(opcion(String(valor), valor + " · " + texto));
+}
+
+function valorEscala(select) { return select.value === "" ? null : Number(select.value); }
+
+// ---- Pantalla de inicio ----
+function mostrarError(texto) {
+  const e = $("error-inicio");
+  e.textContent = texto;
+  e.classList.toggle("oculto", !texto);
+}
+
+function dibujarInicio() {
+  $("sesion").classList.add("oculto");
+  $("inicio").classList.remove("oculto");
+  const ids = Object.keys(planes);
+  if (activo !== null && !planes[activo]) activo = null;
+  if (activo === null && ids.length > 0) { activo = ids[0]; escribirActivo(activo); }
+  const plan = planActivo();
+  $("sin-plan").classList.toggle("oculto", !!plan);
+  $("con-plan").classList.toggle("oculto", !plan);
+  if (!plan) return;
+
+  const elegir = $("plan-activo");
+  elegir.replaceChildren();
+  for (const id of ids) elegir.appendChild(opcion(id, planes[id].perfil + " · desde " + fechaLinda(planes[id].inicio)));
+  elegir.value = activo;
+  $("caja-elegir-plan").classList.toggle("oculto", ids.length < 2);
+
+  const micro = $("microciclo");
+  const microAntes = micro.value;
+  micro.replaceChildren();
+  for (let m = 1; m <= plan.microciclos; m++) micro.appendChild(opcion(String(m), String(m)));
+  if (microAntes && Number(microAntes) <= plan.microciclos) micro.value = microAntes;
+  dibujarDias();
+
+  const registro = registroActivo();
+  $("resumen").textContent = "Sesiones anotadas: " + registro.sesiones.length + " de " + plan.sesiones.length;
+}
+
+/** Opciones de día; las ya anotadas llevan ✓. */
+function dibujarDias() {
+  const plan = planActivo();
+  if (!plan) return;
+  const registro = registroActivo();
+  const micro = Number($("microciclo").value);
+  const dia = $("dia");
+  const antes = dia.value;
+  dia.replaceChildren();
+  for (let d = 1; d <= plan.dias; d++) {
+    const anotada = Logica.sesionDelRegistro(registro, micro, d) !== null;
+    dia.appendChild(opcion(String(d), d + (anotada ? " ✓" : "")));
+  }
+  if (antes && Number(antes) <= plan.dias) dia.value = antes;
+}
+
+function cargarPlan(archivo) {
+  mostrarError("");
+  const lector = new FileReader();
+  lector.onload = () => {
+    let plan;
+    try {
+      plan = Logica.validarPlan(JSON.parse(lector.result));
+    } catch (e) {
+      mostrarError("No se pudo cargar el plan: " + e.message);
+      return;
+    }
+    const id = String(plan.mesocicloId);
+    planes = Object.assign({}, planes, { [id]: plan });
+    escribir(CLAVE_PLANES, planes);
+    if (!registros[id]) {
+      registros = Object.assign({}, registros, { [id]: Logica.registroVacio(plan) });
+      escribir(CLAVE_REGISTROS, registros);
+    }
+    activo = id;
+    escribirActivo(activo);
+    dibujarInicio();
+  };
+  lector.onerror = () => mostrarError("No se pudo leer el archivo.");
+  lector.readAsText(archivo);
+}
+
+function borrarPlan() {
+  const plan = planActivo();
+  if (!plan) return;
+  if (!confirm("¿Borrar el plan de " + plan.perfil + " desde " + fechaLinda(plan.inicio)
+      + " y todo lo anotado en él? Exportá el registro antes si lo necesitás.")) return;
+  const p = Object.assign({}, planes);
+  const r = Object.assign({}, registros);
+  delete p[activo];
+  delete r[activo];
+  planes = p;
+  registros = r;
+  escribir(CLAVE_PLANES, planes);
+  escribir(CLAVE_REGISTROS, registros);
+  activo = null;
+  escribirActivo(null);
+  dibujarInicio();
+}
+
+// ---- Pantalla de sesión ----
+function abrirSesion(microciclo, dia) {
+  const plan = planActivo();
+  if (!plan) return;
+  abierta = { microciclo, dia };
+  const sesionPlan = Logica.sesionDelPlan(plan, microciclo, dia);
+  const guardada = Logica.sesionDelRegistro(registroActivo(), microciclo, dia);
+
+  $("titulo-sesion").textContent = "Microciclo " + microciclo + " · Día " + dia;
+  mostrarFecha(guardada);
+  $("descanso").value = guardada && guardada.descanso != null ? String(guardada.descanso) : "";
+  $("final").value = guardada && guardada.final != null ? String(guardada.final) : "";
+
+  const cont = $("ejercicios");
+  cont.replaceChildren();
+  const ejercicios = sesionPlan ? sesionPlan.ejercicios : [];
+  if (ejercicios.length === 0) {
+    const p = document.createElement("p");
+    p.className = "tarjeta";
+    p.textContent = "Este día no tiene ejercicios";
+    cont.appendChild(p);
+  }
+  for (const ej of ejercicios) {
+    const anotado = guardada ? (guardada.ejercicios || []).find(e => e.bloque === ej.bloque) : null;
+    const tarjeta = document.createElement("div");
+    tarjeta.className = "tarjeta ejercicio";
+    tarjeta.dataset.bloque = ej.bloque;
+
+    const h = document.createElement("h3");
+    h.textContent = ej.nombre;
+    tarjeta.appendChild(h);
+
+    const lab = document.createElement("label");
+    lab.className = "campo";
+    lab.textContent = "Sensación del ejercicio";
+    const esfuerzo = document.createElement("select");
+    esfuerzo.className = "esfuerzo";
+    llenarEscala(esfuerzo, "esfuerzo");
+    esfuerzo.value = anotado && anotado.esfuerzo != null ? String(anotado.esfuerzo) : "";
+    lab.appendChild(esfuerzo);
+    tarjeta.appendChild(lab);
+
+    for (const fila of ej.filas) {
+      const div = document.createElement("div");
+      div.className = "fila-registro";
+      const etiqueta = document.createElement("div");
+      etiqueta.className = "etiqueta";
+      etiqueta.textContent = fila.etiqueta;
+      const casilla = document.createElement("div");
+      casilla.className = "casilla";
+      const input = document.createElement("input");
+      input.type = "text";
+      input.inputMode = "decimal";
+      input.autocomplete = "off";
+      input.placeholder = Logica.pista(fila.series);
+      input.dataset.etiqueta = fila.etiqueta;
+      input.value = anotado && anotado.filas && anotado.filas[fila.etiqueta] ? anotado.filas[fila.etiqueta] : "";
+      input.setAttribute("aria-label", ej.nombre + " " + fila.etiqueta);
+      const mensaje = document.createElement("div");
+      mensaje.className = "mensaje";
+      casilla.append(input, mensaje);
+      div.append(etiqueta, casilla);
+      tarjeta.appendChild(div);
+      validarCasilla(input, mensaje, fila.series);
+      input.addEventListener("input", () => { validarCasilla(input, mensaje, fila.series); guardarPantalla(); });
+    }
+    esfuerzo.addEventListener("change", guardarPantalla);
+    cont.appendChild(tarjeta);
+  }
+
+  $("inicio").classList.add("oculto");
+  $("sesion").classList.remove("oculto");
+  window.scrollTo(0, 0);
+}
+
+function mostrarFecha(guardada) {
+  $("fecha-sesion").textContent = guardada && guardada.fecha ? "Anotada el " + fechaLinda(guardada.fecha) : "Sin anotar todavía";
+}
+
+/** Borde rojo y mensaje si la notación es inválida; aviso gris si tiene más series que las planificadas. */
+function validarCasilla(input, mensaje, planificadas) {
+  const texto = input.value;
+  input.classList.remove("invalido");
+  mensaje.textContent = "";
+  mensaje.className = "mensaje";
+  if (texto.trim() === "") return;
+  if (!Logica.esNotacionValida(texto, planificadas)) {
+    let motivo = "";
+    try { Logica.parseNotacion(texto, planificadas); } catch (e) { motivo = e.message; }
+    input.classList.add("invalido");
+    mensaje.classList.add("error");
+    mensaje.textContent = motivo;
+    return;
+  }
+  const n = Logica.parseNotacion(texto, planificadas).length;
+  if (n > planificadas.length) {
+    mensaje.classList.add("ojo");
+    mensaje.textContent = "Ojo: " + n + " series (planificadas: " + planificadas.length
+      + "). Los decimales del peso van con coma.";
+  }
+}
+
+/** Arma la sesión con lo que hay en pantalla y la guarda (se llama en cada cambio). */
+function guardarPantalla() {
+  if (!abierta) return;
+  const plan = planActivo();
+  if (!plan) return;
+  const registro = registroActivo();
+  const anterior = Logica.sesionDelRegistro(registro, abierta.microciclo, abierta.dia);
+  const ejercicios = [];
+  for (const tarjeta of $("ejercicios").querySelectorAll(".ejercicio")) {
+    const filas = {};
+    for (const input of tarjeta.querySelectorAll("input[data-etiqueta]")) filas[input.dataset.etiqueta] = input.value;
+    ejercicios.push({ bloque: tarjeta.dataset.bloque, esfuerzo: valorEscala(tarjeta.querySelector("select.esfuerzo")), filas });
+  }
+  const sesion = {
+    microciclo: abierta.microciclo,
+    dia: abierta.dia,
+    fecha: anterior && anterior.fecha ? anterior.fecha : hoy(),
+    descanso: valorEscala($("descanso")),
+    final: valorEscala($("final")),
+    ejercicios,
+  };
+  registros = Object.assign({}, registros, { [activo]: Logica.guardarSesion(registro, sesion) });
+  escribir(CLAVE_REGISTROS, registros);
+  mostrarFecha(sesion);
+}
+
+function borrarSesion() {
+  if (!abierta) return;
+  const registro = registroActivo();
+  if (!Logica.sesionDelRegistro(registro, abierta.microciclo, abierta.dia)) {
+    alert("Esta sesión no tiene nada anotado.");
+    return;
+  }
+  if (!confirm("¿Borrar lo anotado en el microciclo " + abierta.microciclo + ", día " + abierta.dia + "?")) return;
+  const sesiones = registro.sesiones.filter(s => !(s.microciclo === abierta.microciclo && s.dia === abierta.dia));
+  registros = Object.assign({}, registros, { [activo]: Object.assign({}, registro, { sesiones }) });
+  escribir(CLAVE_REGISTROS, registros);
+  abrirSesion(abierta.microciclo, abierta.dia);
+}
+
+function exportarRegistro() {
+  alert("Exportar registro: todavía no está disponible.");
+}
+
+// ---- Eventos ----
+llenarEscala($("descanso"), "descanso");
+llenarEscala($("final"), "final");
+$("archivo-plan").addEventListener("change", e => {
+  const archivo = e.target.files && e.target.files[0];
+  if (archivo) cargarPlan(archivo);
+  e.target.value = "";
+});
+$("plan-activo").addEventListener("change", e => { activo = e.target.value; escribirActivo(activo); dibujarInicio(); });
+$("microciclo").addEventListener("change", dibujarDias);
+$("abrir-sesion").addEventListener("click", () => abrirSesion(Number($("microciclo").value), Number($("dia").value)));
+$("borrar-plan").addEventListener("click", borrarPlan);
+$("exportar").addEventListener("click", exportarRegistro);
+$("volver").addEventListener("click", () => { abierta = null; dibujarInicio(); });
+$("descanso").addEventListener("change", guardarPantalla);
+$("final").addEventListener("change", guardarPantalla);
+$("borrar-sesion").addEventListener("click", borrarSesion);
+
+dibujarInicio();
+</script>
+</body>
+</html>
