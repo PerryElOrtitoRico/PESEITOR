@@ -9,6 +9,17 @@ Programa de escritorio para programar mesociclos de sobrecarga con el **método 
 - **Macrociclo:** calendario del año con los mesociclos y los planes de pliometría, más el gráfico anual de volumen e intensidad.
 - **Mesociclo:** la grilla de días y ejercicios, con las series que se calculan solas, los contadores, el gráfico teoría vs planilla y el botón **Exportar PDF**.
 - **Perfiles:** cada persona tiene sus propios ejercicios, 1RM y mesociclos. Las plantillas son compartidas.
+- **Progreso y Registro:** lo que entrenaste de verdad (anotado en el celular) comparado con la planilla.
+
+## Registro desde el celular
+
+La app del celular está en <https://perryelortitorico.github.io/RUTINEITOR/> (código en `celular/`). No necesita cuenta ni conexión una vez abierta.
+
+1. En la PC, pestaña **Mesociclo → Plan al celular**: guarda un `.json` con el plan. Pasalo al celular (WhatsApp a vos mismo, Drive, cable).
+2. En el celular, abrí el link en Chrome y, en el menú ⋮, **Agregar a pantalla principal** (queda como app).
+3. En la app: **Cargar plan** → elegí el `.json`. Después elegís microciclo y día y anotás la sesión; se guarda sola.
+4. Al terminar el mesociclo (o cuando quieras), **Exportar registro** y pasá ese `.json` a la PC.
+5. En la PC, **Mesociclo → Importar registro**. La pestaña **Registro** muestra Planilla vs Entrenado.
 
 ## Requisitos
 
