@@ -2,7 +2,7 @@
 // Al cambiar cualquier archivo de celular/, subir la versión (rutineitor-v2, v3…) para que el celular la actualice.
 "use strict";
 
-const CACHE = "rutineitor-v1";
+const CACHE = "rutineitor-v2";
 const ARCHIVOS = ["./", "./index.html", "./logica.js", "./manifest.webmanifest", "./icono.png"];
 
 self.addEventListener("install", evento => {
