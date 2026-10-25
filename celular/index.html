@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RUTINEITOR · Registro</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1f6feb">
+<link rel="icon" href="icono.png">
+<link rel="apple-touch-icon" href="icono.png">
 <style>
   :root {
     --fondo: #f4f5f7; --tarjeta: #fff; --texto: #1d1f23; --suave: #6b7078; --borde: #cfd3da;
@@ -442,8 +446,35 @@ function borrarSesion() {
   abrirSesion(abierta.microciclo, abierta.dia);
 }
 
-function exportarRegistro() {
-  alert("Exportar registro: todavía no está disponible.");
+/** Comparte (Android: menú de compartir) o descarga el registro del plan activo como JSON. */
+async function exportarRegistro() {
+  const plan = planActivo();
+  if (!plan) return;
+  const registro = registroActivo();
+  if (!registro.sesiones.length) {
+    alert("Todavía no anotaste ninguna sesión");
+    return;
+  }
+  const nombre = Logica.nombreArchivoRegistro(plan);
+  const texto = JSON.stringify(registro, null, 2);
+  const blob = new Blob([texto], { type: "application/json" });
+  try {
+    const archivo = new File([blob], nombre, { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+      await navigator.share({ files: [archivo], title: nombre });
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === "AbortError") return;   // el usuario cerró el menú de compartir
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nombre;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // ---- Eventos ----
@@ -465,6 +496,15 @@ $("final").addEventListener("change", guardarPantalla);
 $("borrar-sesion").addEventListener("click", borrarSesion);
 
 dibujarInicio();
+
+// Sin conexión: el service worker solo se registra si se sirve por http(s), no abierto como file://
+try {
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+} catch (e) {
+  // sin service worker la app igual funciona mientras haya conexión
+}
 </script>
 </body>
 </html>
