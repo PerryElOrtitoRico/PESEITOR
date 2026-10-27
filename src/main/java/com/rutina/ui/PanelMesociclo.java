@@ -15,6 +15,9 @@ import com.rutina.registro.EscalaFinal;
 import com.rutina.registro.JsonRegistro;
 import com.rutina.registro.RegistroCelular;
 import com.rutina.registro.ResumenSesion;
+import com.rutina.registro.SesionPlan;
+import com.rutina.registro.SesionRegistro;
+import com.rutina.registro.TextosRegistro;
 import com.rutina.service.Armado;
 import com.rutina.service.calculo.CalculadoraMesociclo;
 import com.rutina.service.calculo.GeneradorSeries;
@@ -82,8 +85,8 @@ final class PanelMesociclo extends JPanel {
     private final JPanel grafico = new JPanel(new BorderLayout());
     /** Planilla (lo planificado) contra Entrenado (lo anotado en el celular), una fila por sesión y tipo. */
     private final DefaultTableModel registro = new DefaultTableModel(
-            new Object[]{"Micro", "Día", "Fecha", "Descanso", "Final", "Esfuerzo", "Tipo", "Vol planilla",
-                    "Vol entrenado", "IMR planilla", "IMR entrenado"}, 0) {
+            new Object[]{"Micro", "Día", "Fecha", "Descanso", "Final", "Duración", "Esfuerzo", "Tipo", "Vol planilla",
+                    "Vol entrenado", "IMR planilla", "IMR entrenado", "Notas"}, 0) {
         @Override
         public boolean isCellEditable(int r, int c) {
             return false;
@@ -145,6 +148,7 @@ final class PanelMesociclo extends JPanel {
         tablaRegistro.getColumnModel().getColumn(3).setPreferredWidth(220);
         tablaRegistro.getColumnModel().getColumn(4).setPreferredWidth(110);
         tablaRegistro.getColumnModel().getColumn(2).setPreferredWidth(90);
+        tablaRegistro.getColumnModel().getColumn(12).setPreferredWidth(420);
         derecha.addTab("Registro", new JScrollPane(tablaRegistro));
         pliometria.setLayout(new BoxLayout(pliometria, BoxLayout.Y_AXIS));
         JPanel envolturaPlio = new JPanel(new BorderLayout());
@@ -277,12 +281,18 @@ final class PanelMesociclo extends JPanel {
             if (guardado.isEmpty()) return;
             var plan = ArmadorPlan.armar(ctx.perfil.nombre(), actual, resultado, ctx.metodologia());
             for (ResumenSesion s : AnalisisRegistro.analizar(plan, guardado.get())) {
+                SesionRegistro anotada = guardado.get().sesiones().stream()
+                        .filter(x -> x.microciclo() == s.microciclo() && x.dia() == s.dia()).findFirst().orElseThrow();
+                SesionPlan planificada = plan.sesiones().stream()
+                        .filter(x -> x.microciclo() == s.microciclo() && x.dia() == s.dia()).findFirst().orElseThrow();
+                String duracion = TextosRegistro.duracion(anotada.duracionMin());
+                String notas = TextosRegistro.notas(planificada, anotada);
                 for (ComparacionTipo c : s.porTipo()) {
                     registro.addRow(new Object[]{s.microciclo(), s.dia(), s.fecha(),
                             s.descanso() == null ? "" : s.descanso() + " · " + EscalaDescanso.deValor(s.descanso()).texto(),
                             s.sensacionFinal() == null ? "" : s.sensacionFinal() + " · " + EscalaFinal.deValor(s.sensacionFinal()).texto(),
-                            decimal(s.esfuerzoPromedio()), PanelEjercicios.titulo(c.tipo()), c.volumenPlan(), c.volumenReal(),
-                            decimal(c.imrPlan()), decimal(c.imrReal())});
+                            duracion, decimal(s.esfuerzoPromedio()), PanelEjercicios.titulo(c.tipo()), c.volumenPlan(), c.volumenReal(),
+                            decimal(c.imrPlan()), decimal(c.imrReal()), notas});
                 }
             }
         } catch (Exception e) {

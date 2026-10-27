@@ -16,3 +16,9 @@ Una entrada por pedido: tarea, modelo, intento, resultado, qué falló, por qué
 - Resultado: ocultos 7/7 al primer pedido con `--metodos`, 46 s, entrada 3737, salida 655. `git diff` fuera del método pedido: nada (lo único fuera de `limpiarNota` es mi cableado en `registroDeJson`). Tests propios con las 12 aserciones de la tarea, sin comentarios.
 - Qué ayudó: yo dejé hecho en `registroDeJson` la llamada, el `enRango` de la duración y el armado de los records; el modelo recibió solo el helper de 4 pasos y los tests con los strings JSON ya escapados (las comillas escapadas se copiaron bien).
 - Qué se cambia: nada.
+
+## T13 — Gemma, intento 1 (TextosRegistro: duración y notas)
+- Resultado: ocultos 6/6 al primer pedido con `--metodos`, 49 s, entrada 2309, salida 678. Tests propios copiados sin comentarios; el `git diff` no toca nada fuera de los dos métodos.
+- Qué ayudó: el bucle anidado con `break` dado en Java literal (regla "construcciones raras en Java, no en prosa"); los ejemplos de la tarea con los `\n` ya escritos como en el código.
+- Cableado (Claude): `PanelMesociclo.llenarRegistro` agrega las columnas "Duración" (después de "Final") y "Notas" (última, 420 px) llamando a `TextosRegistro`. Para no tocar `ResumenSesion` busco la `SesionRegistro` y la `SesionPlan` por (micro, día).
+- Qué se cambia: nada. Balance de la rama: 4 subtareas, 4 al primer pedido con Gemma, 0 correcciones; ningún código de lógica lo escribí yo.
