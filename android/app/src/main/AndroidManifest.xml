@@ -2,9 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
+        android:name=".App"
         android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
         android:label="RUTINEITOR"
-        android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
+        android:theme="@style/Theme.Rutina">
         <activity
             android:name=".ui.MainActivity"
             android:exported="true">

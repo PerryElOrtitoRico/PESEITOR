@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Barra superior de RUTINEITOR: el nombre y los cuatro discos del ícono (lo único con color) -->
+<androidx.appcompat.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/barra"
+    android:layout_width="match_parent"
+    android:layout_height="?attr/actionBarSize"
+    android:background="@drawable/fondo_barra"
+    android:elevation="0dp"
+    app:contentInsetStart="16dp"
+    app:title="RUTINEITOR"
+    app:titleTextAppearance="@style/Rutina.TituloBarra">
+
+    <LinearLayout
+        android:id="@+id/discos"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <View
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:background="@drawable/disco_rojo" />
+
+        <View
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/disco_amarillo" />
+
+        <View
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/disco_azul" />
+
+        <View
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:layout_marginStart="6dp"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/disco_verde" />
+    </LinearLayout>
+</androidx.appcompat.widget.Toolbar>
