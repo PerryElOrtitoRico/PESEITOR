@@ -95,9 +95,11 @@ const Logica = {
         if (t !== "") filas[etiqueta] = t;
       }
       const esfuerzo = ej.esfuerzo === undefined ? null : ej.esfuerzo;
-      // TODO T23
-      if (Object.keys(filas).length === 0 && esfuerzo === null) continue;
-      ejercicios.push({ bloque: ej.bloque, esfuerzo, filas });
+      const nota = typeof ej.nota === "string" ? ej.nota.trim() : "";
+      if (Object.keys(filas).length === 0 && esfuerzo === null && nota === "") continue;
+      const limpio = { bloque: ej.bloque, esfuerzo, filas };
+      if (nota !== "") limpio.nota = nota;
+      ejercicios.push(limpio);
     }
     return Object.assign({}, sesion, { ejercicios });
   },

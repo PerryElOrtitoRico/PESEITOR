@@ -9,3 +9,7 @@ Una entrada por pedido: tarea, modelo, intento, resultado, qué falló, por qué
 
 ## T22 — funciones del cronómetro · Gemma · intento 1 · OK (7/7 ocultos de T22)
 - 206 s, entrada 4345, salida 2932, `finish_reason: stop`. Las siete funciones copiadas de los pasos; diff limpio fuera de ellas. Sin cambios para el pedido siguiente (T23 con qwen: el archivo ya mide más, la entrada pasa de ~4400 tokens, así que sin razonamiento).
+
+## T23 — `limpiarSesion` con nota · qwen · intento 1 · OK (2/2 ocultos de T23; las 15 pruebas viejas siguen en verde)
+- 278 s, entrada 3708, salida 2871, `finish_reason: stop`. Copió los cinco pasos en el lugar del `// TODO T23`; diff limpio, el resto del archivo idéntico.
+- El esqueleto con el cuerpo viejo funcionando + un `// TODO` donde cambiar (en vez de `throw`) funcionó bien para una modificación de función existente.
