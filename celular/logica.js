@@ -84,7 +84,8 @@ const Logica = {
   },
 
   /** Copia de la sesión sin ruido: saca de cada ejercicio las filas con texto vacío o solo espacios (y recorta
-   *  los espacios del resto), y saca los ejercicios que quedan sin filas y con esfuerzo null. */
+   *  los espacios del resto). A cada ejercicio le recorta la nota (trim); nota vacía → se borra la clave `nota`.
+   *  Un ejercicio se conserva si tiene filas o esfuerzo o nota. */
   limpiarSesion(sesion) {
     const ejercicios = [];
     for (const ej of sesion.ejercicios || []) {
@@ -94,6 +95,7 @@ const Logica = {
         if (t !== "") filas[etiqueta] = t;
       }
       const esfuerzo = ej.esfuerzo === undefined ? null : ej.esfuerzo;
+      // TODO T23
       if (Object.keys(filas).length === 0 && esfuerzo === null) continue;
       ejercicios.push({ bloque: ej.bloque, esfuerzo, filas });
     }
@@ -111,6 +113,64 @@ const Logica = {
     }
     if (kgs.length === 0) return reps;
     return reps + " · " + kgs.map(k => String(k).replace(".", ",")).join("/");
+  },
+
+  /** Suma de reps de una lista de series [{reps, kg}]. [] → 0. */
+  totalReps(series) {
+    // TODO T21
+    throw new Error("T21");
+  },
+
+  /** filasPlan: [{etiqueta, series}] del plan; textos: { etiqueta: texto } anotado.
+   *  Por fila: texto ausente o en blanco → reps planificadas de esa fila; texto válido → reps de parseNotacion(texto, series);
+   *  texto inválido → todo el resultado tiene hechas = null.
+   *  Devuelve { planificadas, hechas }. */
+  totalesEjercicio(filasPlan, textos) {
+    // TODO T21
+    throw new Error("T21");
+  },
+
+  /** Estado: { acumuladoMs, desde } (desde = epoch ms si está corriendo, null si está parado). */
+  cronoNuevo() {
+    // TODO T22
+    throw new Error("T22");
+  },
+
+  /** Si ya corre, devuelve una copia igual; si no, { acumuladoMs, desde: ahora }. */
+  cronoIniciar(estado, ahora) {
+    // TODO T22
+    throw new Error("T22");
+  },
+
+  /** Si corre: { acumuladoMs: acumuladoMs + (ahora - desde), desde: null }; si no, copia igual. */
+  cronoPausar(estado, ahora) {
+    // TODO T22
+    throw new Error("T22");
+  },
+
+  /** acumuladoMs + (desde === null ? 0 : ahora - desde). */
+  cronoMs(estado, ahora) {
+    // TODO T22
+    throw new Error("T22");
+  },
+
+  /** "h:mm:ss" sin redondear: 0 → "0:00:00", 75_500 → "0:01:15", 3_725_000 → "1:02:05". */
+  cronoTexto(ms) {
+    // TODO T22
+    throw new Error("T22");
+  },
+
+  /** 0 → null; si no, Math.max(1, Math.round(ms / 60000)): 29_999 → 1, 90_000 → 2, 4_500_000 → 75. */
+  minutosDe(ms) {
+    // TODO T22
+    throw new Error("T22");
+  },
+
+  /** Texto que escribe el usuario en minutos → entero 1..600, o null si es inválido.
+   *  Acepta espacios alrededor; solo dígitos. "75" → 75, " 5 " → 5, "0" → null, "601" → null, "7,5" → null, "" → null. */
+  duracionValida(texto) {
+    // TODO T22
+    throw new Error("T22");
   },
 
   /** "registro-<perfil>-<inicio>.json", con los espacios del perfil cambiados por "_". */

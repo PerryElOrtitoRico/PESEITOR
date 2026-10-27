@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pruebas de las mejoras del celular</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 16px; background: #fff; color: #222; }
+  .ok { color: #1a7f37; } .mal { color: #c62828; } li { margin: 2px 0; }
+  #resumen { font-size: 1.3em; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>Pruebas ocultas de las mejoras (T21 a T24)</h1>
+<p id="resumen">Corriendo…</p>
+<ul id="lista"></ul>
+<script src="../../../../celular/logica.js"></script>
+<script>
+"use strict";
+const pendientes = [];
+const resultados = [];
+function prueba(nombre, fn) {
+  pendientes.push((async () => {
+    try { await fn(); resultados.push([true, nombre]); }
+    catch (e) { resultados.push([false, nombre + " → " + (e && e.message ? e.message : e)]); }
+  })());
+}
+function igual(a, b, msg) {
+  const ja = JSON.stringify(a), jb = JSON.stringify(b);
+  if (ja !== jb) throw new Error((msg ? msg + ": " : "") + "esperado " + jb + ", obtenido " + ja);
+}
+function verdad(c, msg) { if (!c) throw new Error(msg || "se esperaba verdadero"); }
+const S = (reps, kg) => ({ reps, kg });
+
+if (typeof Logica === "undefined") {
+  resultados.push([false, "No se encontró el objeto global Logica"]);
+} else {
+  // ---------- T21 ----------
+  prueba("T21 totalReps", () => {
+    igual(Logica.totalReps([]), 0);
+    igual(Logica.totalReps([S(3, 80), S(3, 80)]), 6);
+    igual(Logica.totalReps([S(12, 0)]), 12);
+  });
+  const FILAS = [
+    { etiqueta: "A", series: [S(3, 80), S(3, 80)] },
+    { etiqueta: "B", series: [S(5, 60)] },
+  ];
+  prueba("T21 totalesEjercicio: ejemplos del contrato", () => {
+    igual(Logica.totalesEjercicio(FILAS, {}), { planificadas: 11, hechas: 11 });
+    igual(Logica.totalesEjercicio(FILAS, { A: "3.2" }), { planificadas: 11, hechas: 10 });
+    igual(Logica.totalesEjercicio(FILAS, { B: "0" }), { planificadas: 11, hechas: 6 });
+    igual(Logica.totalesEjercicio(FILAS, { A: "x" }), { planificadas: 11, hechas: null });
+  });
+  prueba("T21 totalesEjercicio: blancos, inválido en la segunda fila y sin filas", () => {
+    igual(Logica.totalesEjercicio(FILAS, { A: "   ", B: "" }), { planificadas: 11, hechas: 11 });
+    igual(Logica.totalesEjercicio(FILAS, { A: "4.4.4", B: "x" }), { planificadas: 11, hechas: null });
+    igual(Logica.totalesEjercicio(FILAS, { A: "x", B: "6" }), { planificadas: 11, hechas: null });
+    igual(Logica.totalesEjercicio(FILAS, { A: "3-85.3", B: "5.5" }), { planificadas: 11, hechas: 16 });
+    igual(Logica.totalesEjercicio([], {}), { planificadas: 0, hechas: 0 });
+  });
+  prueba("T21 totalesEjercicio: no modifica los argumentos", () => {
+    const f = JSON.stringify(FILAS), t = { A: "3.2" }, tj = JSON.stringify(t);
+    Logica.totalesEjercicio(FILAS, t);
+    igual(JSON.stringify(FILAS), f);
+    igual(JSON.stringify(t), tj);
+  });
+
+  // ---------- T22 ----------
+  prueba("T22 cronoNuevo", () => {
+    igual(Logica.cronoNuevo(), { acumuladoMs: 0, desde: null });
+  });
+  prueba("T22 cronoIniciar", () => {
+    const e = Logica.cronoNuevo();
+    igual(Logica.cronoIniciar(e, 1000), { acumuladoMs: 0, desde: 1000 });
+    igual(e, { acumuladoMs: 0, desde: null }, "no modifica el estado");
+    const corre = { acumuladoMs: 500, desde: 1000 };
+    const r = Logica.cronoIniciar(corre, 9000);
+    igual(r, { acumuladoMs: 500, desde: 1000 });
+    verdad(r !== corre, "tiene que devolver una copia");
+    igual(Logica.cronoIniciar({ acumuladoMs: 7000, desde: null }, 20000), { acumuladoMs: 7000, desde: 20000 });
+  });
+  prueba("T22 cronoPausar", () => {
+    const corre = { acumuladoMs: 500, desde: 1000 };
+    igual(Logica.cronoPausar(corre, 4000), { acumuladoMs: 3500, desde: null });
+    igual(corre, { acumuladoMs: 500, desde: 1000 }, "no modifica el estado");
+    const parado = { acumuladoMs: 500, desde: null };
+    const r = Logica.cronoPausar(parado, 4000);
+    igual(r, { acumuladoMs: 500, desde: null });
+    verdad(r !== parado, "tiene que devolver una copia");
+  });
+  prueba("T22 cronoMs", () => {
+    igual(Logica.cronoMs({ acumuladoMs: 500, desde: null }, 99999), 500);
+    igual(Logica.cronoMs({ acumuladoMs: 500, desde: 1000 }, 4000), 3500);
+    igual(Logica.cronoMs(Logica.cronoNuevo(), 5), 0);
+  });
+  prueba("T22 cronoTexto", () => {
+    igual(Logica.cronoTexto(0), "0:00:00");
+    igual(Logica.cronoTexto(75500), "0:01:15");
+    igual(Logica.cronoTexto(3725000), "1:02:05");
+    igual(Logica.cronoTexto(999), "0:00:00");
+    igual(Logica.cronoTexto(59999), "0:00:59");
+    igual(Logica.cronoTexto(36000000), "10:00:00");
+  });
+  prueba("T22 minutosDe", () => {
+    igual(Logica.minutosDe(0), null);
+    igual(Logica.minutosDe(29999), 1);
+    igual(Logica.minutosDe(1), 1);
+    igual(Logica.minutosDe(90000), 2);
+    igual(Logica.minutosDe(4500000), 75);
+  });
+  prueba("T22 duracionValida", () => {
+    igual(Logica.duracionValida("75"), 75);
+    igual(Logica.duracionValida(" 5 "), 5);
+    igual(Logica.duracionValida("600"), 600);
+    igual(Logica.duracionValida("1"), 1);
+    for (const mal of ["0", "601", "7,5", "", "  ", "abc", "-5", "5min", "7.5", null]) {
+      igual(Logica.duracionValida(mal), null, JSON.stringify(mal));
+    }
+  });
+
+  // ---------- T23 ----------
+  prueba("T23 limpiarSesion: notas", () => {
+    const s = { microciclo: 1, dia: 1, fecha: "2026-10-27", descanso: null, final: null, ejercicios: [
+      { bloque: "1-1", esfuerzo: null, filas: { "70": "  " }, nota: "  subir peso  " },
+      { bloque: "1-2", esfuerzo: null, filas: { "4x12": "" }, nota: "   " },
+      { bloque: "1-3", esfuerzo: 2, filas: {}, nota: "" },
+      { bloque: "1-4", esfuerzo: null, filas: { "70": " 3.3 " }, nota: "dolor leve" },
+      { bloque: "1-5", esfuerzo: null, filas: { "70": "3" } },
+      { bloque: "1-6", esfuerzo: 4, filas: {}, nota: undefined },
+    ] };
+    const original = JSON.stringify(s);
+    igual(Logica.limpiarSesion(s).ejercicios, [
+      { bloque: "1-1", esfuerzo: null, filas: {}, nota: "subir peso" },
+      { bloque: "1-3", esfuerzo: 2, filas: {} },
+      { bloque: "1-4", esfuerzo: null, filas: { "70": "3.3" }, nota: "dolor leve" },
+      { bloque: "1-5", esfuerzo: null, filas: { "70": "3" } },
+      { bloque: "1-6", esfuerzo: 4, filas: {} },
+    ]);
+    igual(JSON.stringify(s), original, "no modifica el argumento");
+  });
+  prueba("T23 limpiarSesion: nota null y guardarSesion", () => {
+    const s = { microciclo: 2, dia: 1, fecha: "2026-10-27", descanso: 3, final: null, ejercicios: [
+      { bloque: "1-1", esfuerzo: null, filas: {}, nota: null },
+      { bloque: "1-2", esfuerzo: null, filas: {}, nota: " ok " },
+    ] };
+    const reg = { formato: "rutineitor-registro", version: 1, perfil: "X", mesocicloId: "m", sesiones: [] };
+    igual(Logica.guardarSesion(reg, s).sesiones[0].ejercicios, [{ bloque: "1-2", esfuerzo: null, filas: {}, nota: "ok" }]);
+  });
+
+  // ---------- T24 (service worker con un entorno falso) ----------
+  async function cargarSw(cachesFalsos) {
+    const texto = await (await fetch("../../../../celular/sw.js")).text();
+    const escuchas = {};
+    const self = { addEventListener: (tipo, fn) => { escuchas[tipo] = fn; }, skipWaiting: () => {}, clients: { claim: () => {} } };
+    new Function("self", "caches", "fetch", texto)(self, cachesFalsos, async () => new Response("red"));
+    return escuchas;
+  }
+  function cachesFalsos() {
+    const almacen = {};   // nombre → { clave: Response }
+    return {
+      almacen,
+      open: async nombre => {
+        almacen[nombre] = almacen[nombre] || {};
+        return { put: async (k, v) => { almacen[nombre][k] = v; }, addAll: async () => {} };
+      },
+      keys: async () => Object.keys(almacen),
+      delete: async nombre => { delete almacen[nombre]; return true; },
+      match: async () => undefined,
+    };
+  }
+  prueba("T24 POST /compartir guarda el plan y redirige", async () => {
+    const c = cachesFalsos();
+    const esc = await cargarSw(c);
+    const datos = new FormData();
+    datos.append("plan", new File(['{"formato":"rutineitor-plan"}'], "plan-x.json", { type: "application/json" }));
+    let respuesta = null;
+    const evento = {
+      request: { method: "POST", url: "https://ejemplo.github.io/rutineitor/compartir", formData: async () => datos },
+      respondWith: p => { respuesta = p; },
+    };
+    esc.fetch(evento);
+    verdad(respuesta !== null, "no llamó a respondWith");
+    const r = await respuesta;
+    igual(r.status, 303, "estado");
+    verdad(r.headers.get("Location").endsWith("?compartido=1"), "Location: " + r.headers.get("Location"));
+    verdad(c.almacen["rutineitor-compartido"] && c.almacen["rutineitor-compartido"]["./compartido.json"], "no guardó ./compartido.json en rutineitor-compartido");
+    igual(await c.almacen["rutineitor-compartido"]["./compartido.json"].text(), '{"formato":"rutineitor-plan"}');
+  });
+  prueba("T24 un GET sigue yendo al cache/red y un POST a otra ruta no se toca", async () => {
+    const esc = await cargarSw(cachesFalsos());
+    let usado = false;
+    esc.fetch({ request: { method: "GET", url: "https://ejemplo.github.io/rutineitor/index.html" }, respondWith: () => { usado = true; } });
+    verdad(usado, "un GET tiene que pasar por respondWith");
+    usado = false;
+    esc.fetch({ request: { method: "POST", url: "https://ejemplo.github.io/rutineitor/otra" }, respondWith: () => { usado = true; } });
+    verdad(!usado, "un POST a otra ruta no se atiende");
+  });
+  prueba("T24 activate borra los caches viejos pero no el compartido", async () => {
+    const c = cachesFalsos();
+    c.almacen["rutineitor-v2"] = {}; c.almacen["rutineitor-v3"] = {}; c.almacen["rutineitor-compartido"] = {}; c.almacen["otra-app"] = {};
+    const esc = await cargarSw(c);
+    let espera = null;
+    esc.activate({ waitUntil: p => { espera = p; } });
+    await espera;
+    igual(Object.keys(c.almacen).sort(), ["otra-app", "rutineitor-compartido", "rutineitor-v3"]);
+  });
+  prueba("T24 versión del cache", async () => {
+    const texto = await (await fetch("../../../../celular/sw.js")).text();
+    verdad(/const CACHE = "rutineitor-v3"/.test(texto), 'tiene que decir const CACHE = "rutineitor-v3"');
+  });
+}
+
+Promise.all(pendientes).then(() => {
+  resultados.sort((a, b) => a[1].localeCompare(b[1]));
+  const fallas = resultados.filter(r => !r[0]);
+  const lista = document.getElementById("lista");
+  for (const [ok, texto] of resultados) {
+    const li = document.createElement("li");
+    li.className = ok ? "ok" : "mal";
+    li.textContent = (ok ? "✔ " : "✘ ") + texto;
+    lista.appendChild(li);
+  }
+  const resumen = document.getElementById("resumen");
+  resumen.textContent = fallas.length === 0 ? "Todas las pruebas pasaron (" + resultados.length + ")"
+                                            : fallas.length + " de " + resultados.length + " pruebas fallaron";
+  resumen.className = fallas.length === 0 ? "ok" : "mal";
+});
+</script>
+</body>
+</html>
