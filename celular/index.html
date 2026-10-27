@@ -51,6 +51,11 @@
   .mensaje { font-size: 0.9em; margin-top: 3px; }
   .mensaje.error { color: var(--error); }
   .mensaje.ojo { color: var(--suave); }
+  .total { margin: 0 0 6px; font-size: 0.95em; color: var(--suave); }
+  .total.invalido-total { color: var(--error); }
+  textarea.nota { font: inherit; width: 100%; min-height: 64px; border-radius: 8px; border: 1px solid var(--borde); padding: 8px 10px; resize: vertical; }
+  .crono { text-align: center; }
+  .crono .tiempo { font-size: 2.2em; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
 </style>
 </head>
 <body>
@@ -102,6 +107,14 @@
     </div>
     <p id="fecha-sesion" class="suave"></p>
 
+    <div class="tarjeta crono">
+      <div id="tiempo" class="tiempo">0:00:00</div>
+      <div class="fila-2">
+        <button id="crono-boton" class="principal">Iniciar</button>
+        <button id="crono-editar">Editar duración</button>
+      </div>
+    </div>
+
     <div class="tarjeta">
       <label class="campo" for="descanso">Descanso previo</label>
       <select id="descanso" data-escala="descanso"></select>
@@ -126,7 +139,7 @@
 const ESCALAS = {
   descanso: [[6, "Bien descansado y con ganas de entrenar"], [5, "Bien descansado"], [4, "Bien descansado pero distraído"],
              [3, "Mal descansado pero con ganas de entrenar"], [2, "Mal descansado"], [1, "Mal descansado y sin ganas de entrenar"]],
-  esfuerzo: [[1, "Muy liviano"], [2, "Liviano"], [3, "Justo"], [4, "Pesado"], [5, "Al límite"]],
+  esfuerzo: [[1, "Muy liviano"], [2, "Liviano"], [3, "Justo"], [4, "Al límite"], [5, "Pesado"]],
   final: [[1, "Destruido"], [2, "Cansado"], [3, "Normal"], [4, "Bien"], [5, "Con energía"]],
 };
 
@@ -260,28 +273,31 @@ function dibujarDias() {
   if (antes && Number(antes) <= plan.dias) dia.value = antes;
 }
 
+/** Carga un plan desde su texto JSON (lo usan "Cargar plan" y el plan compartido desde Android). */
+function cargarPlanTexto(texto) {
+  let plan;
+  try {
+    plan = Logica.validarPlan(JSON.parse(texto));
+  } catch (e) {
+    mostrarError("No se pudo cargar el plan: " + e.message);
+    return;
+  }
+  const id = String(plan.mesocicloId);
+  planes = Object.assign({}, planes, { [id]: plan });
+  escribir(CLAVE_PLANES, planes);
+  if (!registros[id]) {
+    registros = Object.assign({}, registros, { [id]: Logica.registroVacio(plan) });
+    escribir(CLAVE_REGISTROS, registros);
+  }
+  activo = id;
+  escribirActivo(activo);
+  dibujarInicio();
+}
+
 function cargarPlan(archivo) {
   mostrarError("");
   const lector = new FileReader();
-  lector.onload = () => {
-    let plan;
-    try {
-      plan = Logica.validarPlan(JSON.parse(lector.result));
-    } catch (e) {
-      mostrarError("No se pudo cargar el plan: " + e.message);
-      return;
-    }
-    const id = String(plan.mesocicloId);
-    planes = Object.assign({}, planes, { [id]: plan });
-    escribir(CLAVE_PLANES, planes);
-    if (!registros[id]) {
-      registros = Object.assign({}, registros, { [id]: Logica.registroVacio(plan) });
-      escribir(CLAVE_REGISTROS, registros);
-    }
-    activo = id;
-    escribirActivo(activo);
-    dibujarInicio();
-  };
+  lector.onload = () => cargarPlanTexto(lector.result);
   lector.onerror = () => mostrarError("No se pudo leer el archivo.");
   lector.readAsText(archivo);
 }
@@ -309,6 +325,7 @@ function abrirSesion(microciclo, dia) {
   const plan = planActivo();
   if (!plan) return;
   abierta = { microciclo, dia };
+  iniciarCrono();
   const sesionPlan = Logica.sesionDelPlan(plan, microciclo, dia);
   const guardada = Logica.sesionDelRegistro(registroActivo(), microciclo, dia);
 
@@ -335,6 +352,10 @@ function abrirSesion(microciclo, dia) {
     const h = document.createElement("h3");
     h.textContent = ej.nombre;
     tarjeta.appendChild(h);
+
+    const total = document.createElement("p");
+    total.className = "total";
+    tarjeta.appendChild(total);
 
     const lab = document.createElement("label");
     lab.className = "campo";
@@ -368,8 +389,22 @@ function abrirSesion(microciclo, dia) {
       div.append(etiqueta, casilla);
       tarjeta.appendChild(div);
       validarCasilla(input, mensaje, fila.series);
-      input.addEventListener("input", () => { validarCasilla(input, mensaje, fila.series); guardarPantalla(); });
+      input.addEventListener("input", () => { validarCasilla(input, mensaje, fila.series); actualizarTotal(tarjeta, ej.filas); guardarPantalla(); });
     }
+
+    const labNota = document.createElement("label");
+    labNota.className = "campo";
+    labNota.textContent = "Notas";
+    const nota = document.createElement("textarea");
+    nota.className = "nota";
+    nota.maxLength = 500;
+    nota.rows = 2;
+    nota.value = anotado && typeof anotado.nota === "string" ? anotado.nota : "";
+    nota.addEventListener("input", guardarPantalla);
+    labNota.appendChild(nota);
+    tarjeta.appendChild(labNota);
+
+    actualizarTotal(tarjeta, ej.filas);
     esfuerzo.addEventListener("change", guardarPantalla);
     cont.appendChild(tarjeta);
   }
@@ -381,6 +416,89 @@ function abrirSesion(microciclo, dia) {
 
 function mostrarFecha(guardada) {
   $("fecha-sesion").textContent = guardada && guardada.fecha ? "Anotada el " + fechaLinda(guardada.fecha) : "Sin anotar todavía";
+}
+
+/** "Total: <hechas> reps (planificadas <plan>)" debajo del nombre del ejercicio. */
+function actualizarTotal(tarjeta, filasPlan) {
+  const textos = {};
+  for (const input of tarjeta.querySelectorAll("input[data-etiqueta]")) textos[input.dataset.etiqueta] = input.value;
+  const t = Logica.totalesEjercicio(filasPlan, textos);
+  const p = tarjeta.querySelector(".total");
+  p.textContent = "Total: " + (t.hechas === null ? "—" : t.hechas) + " reps (planificadas " + t.planificadas + ")";
+  p.classList.toggle("invalido-total", t.hechas === null);
+}
+
+// ---- Cronómetro de la sesión (estado en localStorage por plan + microciclo + día) ----
+const CLAVE_CRONO = "rutineitor.crono";
+let intervaloCrono = null;
+let ticksCrono = 0;
+
+function claveCrono() { return activo + "|" + abierta.microciclo + "|" + abierta.dia; }
+
+function leerCrono() {
+  const todos = leer(CLAVE_CRONO, {});
+  const e = todos[claveCrono()];
+  return e && typeof e.acumuladoMs === "number" ? { acumuladoMs: e.acumuladoMs, desde: typeof e.desde === "number" ? e.desde : null } : Logica.cronoNuevo();
+}
+
+function guardarCrono(estado) {
+  const todos = leer(CLAVE_CRONO, {});
+  todos[claveCrono()] = estado;
+  escribir(CLAVE_CRONO, todos);
+}
+
+function borrarCrono() {
+  const todos = leer(CLAVE_CRONO, {});
+  delete todos[claveCrono()];
+  escribir(CLAVE_CRONO, todos);
+}
+
+function dibujarCrono() {
+  if (!abierta) return;
+  const estado = leerCrono();
+  $("tiempo").textContent = Logica.cronoTexto(Logica.cronoMs(estado, Date.now()));
+  $("crono-boton").textContent = estado.desde !== null ? "Pausar" : (estado.acumuladoMs > 0 ? "Reanudar" : "Iniciar");
+}
+
+function iniciarCrono() {
+  detenerCrono();
+  dibujarCrono();
+  ticksCrono = 0;
+  intervaloCrono = setInterval(() => {
+    dibujarCrono();
+    // mientras corre, la duración se guarda cada 30 s por si se cierra la app sin pausar
+    if (++ticksCrono % 30 === 0 && abierta && leerCrono().desde !== null) guardarPantalla();
+  }, 1000);
+}
+
+function detenerCrono() {
+  if (intervaloCrono !== null) clearInterval(intervaloCrono);
+  intervaloCrono = null;
+}
+
+function alternarCrono() {
+  if (!abierta) return;
+  const estado = leerCrono();
+  const ahora = Date.now();
+  guardarCrono(estado.desde !== null ? Logica.cronoPausar(estado, ahora) : Logica.cronoIniciar(estado, ahora));
+  dibujarCrono();
+  guardarPantalla();
+}
+
+function editarDuracion() {
+  if (!abierta) return;
+  const estado = leerCrono();
+  const actuales = Logica.minutosDe(Logica.cronoMs(estado, Date.now()));
+  const texto = prompt("Duración en minutos", actuales === null ? "" : String(actuales));
+  if (texto === null) return;   // canceló
+  const n = Logica.duracionValida(texto);
+  if (n === null) {
+    alert("Escribí los minutos, de 1 a 600");
+    return;
+  }
+  guardarCrono({ acumuladoMs: n * 60000, desde: null });
+  dibujarCrono();
+  guardarPantalla();
 }
 
 /** Borde rojo y mensaje si la notación es inválida; aviso gris si tiene más series que las planificadas. */
@@ -417,7 +535,8 @@ function guardarPantalla() {
   for (const tarjeta of $("ejercicios").querySelectorAll(".ejercicio")) {
     const filas = {};
     for (const input of tarjeta.querySelectorAll("input[data-etiqueta]")) filas[input.dataset.etiqueta] = input.value;
-    ejercicios.push({ bloque: tarjeta.dataset.bloque, esfuerzo: valorEscala(tarjeta.querySelector("select.esfuerzo")), filas });
+    ejercicios.push({ bloque: tarjeta.dataset.bloque, esfuerzo: valorEscala(tarjeta.querySelector("select.esfuerzo")), filas,
+                      nota: tarjeta.querySelector("textarea.nota").value });
   }
   const sesion = {
     microciclo: abierta.microciclo,
@@ -425,6 +544,7 @@ function guardarPantalla() {
     fecha: anterior && anterior.fecha ? anterior.fecha : hoy(),
     descanso: valorEscala($("descanso")),
     final: valorEscala($("final")),
+    duracionMin: Logica.minutosDe(Logica.cronoMs(leerCrono(), Date.now())),
     ejercicios,
   };
   registros = Object.assign({}, registros, { [activo]: Logica.guardarSesion(registro, sesion) });
@@ -443,6 +563,7 @@ function borrarSesion() {
   const sesiones = registro.sesiones.filter(s => !(s.microciclo === abierta.microciclo && s.dia === abierta.dia));
   registros = Object.assign({}, registros, { [activo]: Object.assign({}, registro, { sesiones }) });
   escribir(CLAVE_REGISTROS, registros);
+  borrarCrono();
   abrirSesion(abierta.microciclo, abierta.dia);
 }
 
@@ -490,12 +611,40 @@ $("microciclo").addEventListener("change", dibujarDias);
 $("abrir-sesion").addEventListener("click", () => abrirSesion(Number($("microciclo").value), Number($("dia").value)));
 $("borrar-plan").addEventListener("click", borrarPlan);
 $("exportar").addEventListener("click", exportarRegistro);
-$("volver").addEventListener("click", () => { abierta = null; dibujarInicio(); });
+$("volver").addEventListener("click", () => { detenerCrono(); abierta = null; dibujarInicio(); });
+$("crono-boton").addEventListener("click", alternarCrono);
+$("crono-editar").addEventListener("click", editarDuracion);
 $("descanso").addEventListener("change", guardarPantalla);
 $("final").addEventListener("change", guardarPantalla);
 $("borrar-sesion").addEventListener("click", borrarSesion);
 
 dibujarInicio();
+
+/** Si la app se abrió desde el menú Compartir de Android (?compartido=1): carga el plan que guardó el service worker. */
+async function cargarPlanCompartido() {
+  let params;
+  try { params = new URLSearchParams(location.search); } catch (e) { return; }
+  if (params.get("compartido") !== "1") return;
+  try {
+    if (window.caches) {
+      const cache = await caches.open("rutineitor-compartido");
+      const respuesta = await cache.match("./compartido.json");
+      if (respuesta) {
+        const texto = await respuesta.text();
+        await cache.delete("./compartido.json");
+        cargarPlanTexto(texto);
+      } else {
+        mostrarError("No se pudo cargar el plan: no llegó ningún archivo.");
+      }
+    } else {
+      mostrarError("No se pudo cargar el plan: este navegador no guarda archivos compartidos.");
+    }
+  } catch (e) {
+    mostrarError("No se pudo cargar el plan: " + e.message);
+  }
+  try { history.replaceState(null, "", "./"); } catch (e) { /* la URL queda como está */ }
+}
+cargarPlanCompartido();
 
 // Sin conexión: el service worker solo se registra si se sirve por http(s), no abierto como file://
 try {
