@@ -90,6 +90,7 @@ public final class JsonRegistro {
             }
             enRango(s.descanso(), 1, 6, donde + ": descanso");
             enRango(s.sensacionFinal(), 1, 5, donde + ": sensación final");
+            enRango(s.duracionMin(), 1, 600, donde + ": duración");
             if (!vistas.add(s.microciclo() + "-" + s.dia())) {
                 throw new IllegalArgumentException(donde + ": está repetida en el registro");
             }
@@ -98,10 +99,10 @@ public final class JsonRegistro {
                 if (e == null) throw new IllegalArgumentException(donde + ": hay un ejercicio vacío (null)");
                 enRango(e.esfuerzo(), 1, 5, donde + ", ejercicio " + e.bloque() + ": esfuerzo");
                 Map<String, String> filas = e.filas() == null ? Map.of() : e.filas();
-                ejercicios.add(new EjercicioRegistro(e.bloque(), e.esfuerzo(), filas));
+                ejercicios.add(new EjercicioRegistro(e.bloque(), e.esfuerzo(), filas, e.nota()));
             }
             sesiones.add(new SesionRegistro(s.microciclo(), s.dia(), s.fecha(), s.descanso(), s.sensacionFinal(),
-                    List.copyOf(ejercicios)));
+                    List.copyOf(ejercicios), s.duracionMin()));
         }
         return new RegistroCelular(r.formato(), r.version(), r.perfil(), r.mesocicloId(), List.copyOf(sesiones));
     }
