@@ -1,12 +1,12 @@
 package com.rutina.registro;
 
-/** Sensación de un ejercicio (1 = muy liviano, 5 = al límite). */
+/** Sensación de un ejercicio (1 = muy liviano, 5 = pesado (no salió)). */
 public enum EscalaEsfuerzo {
     MUY_LIVIANO(1, "Muy liviano"),
     LIVIANO(2, "Liviano"),
     JUSTO(3, "Justo"),
-    PESADO(4, "Pesado"),
-    AL_LIMITE(5, "Al límite");
+    AL_LIMITE(4, "Al límite"),
+    PESADO(5, "Pesado");
 
     private final int valor;
     private final String texto;

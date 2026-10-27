@@ -90,6 +90,7 @@ public final class JsonRegistro {
             }
             enRango(s.descanso(), 1, 6, donde + ": descanso");
             enRango(s.sensacionFinal(), 1, 5, donde + ": sensación final");
+            enRango(s.duracionMin(), 1, 600, donde + ": duración");
             if (!vistas.add(s.microciclo() + "-" + s.dia())) {
                 throw new IllegalArgumentException(donde + ": está repetida en el registro");
             }
@@ -98,10 +99,11 @@ public final class JsonRegistro {
                 if (e == null) throw new IllegalArgumentException(donde + ": hay un ejercicio vacío (null)");
                 enRango(e.esfuerzo(), 1, 5, donde + ", ejercicio " + e.bloque() + ": esfuerzo");
                 Map<String, String> filas = e.filas() == null ? Map.of() : e.filas();
-                ejercicios.add(new EjercicioRegistro(e.bloque(), e.esfuerzo(), filas));
+                String nota = limpiarNota(e.nota(), donde + ", ejercicio " + e.bloque());
+                ejercicios.add(new EjercicioRegistro(e.bloque(), e.esfuerzo(), filas, nota));
             }
             sesiones.add(new SesionRegistro(s.microciclo(), s.dia(), s.fecha(), s.descanso(), s.sensacionFinal(),
-                    List.copyOf(ejercicios)));
+                    List.copyOf(ejercicios), s.duracionMin()));
         }
         return new RegistroCelular(r.formato(), r.version(), r.perfil(), r.mesocicloId(), List.copyOf(sesiones));
     }
@@ -113,6 +115,19 @@ public final class JsonRegistro {
     /** JSON con sangría (la clave de la sensación final es "final"). */
     public static String registroAJson(RegistroCelular r) {
         return GSON.toJson(r);
+    }
+
+    /**
+     * Nota limpia de un ejercicio: null o en blanco da null; si no, la nota sin espacios en los extremos.
+     *
+     * @param donde de qué sesión y ejercicio es (empieza el mensaje de error)
+     * @throws IllegalArgumentException si, después del strip, tiene más de 500 caracteres
+     */
+    static String limpiarNota(String nota, String donde) {
+        if (nota == null || nota.isBlank()) return null;
+        String limpia = nota.strip();
+        if (limpia.length() > 500) throw new IllegalArgumentException(donde + ": la nota tiene más de 500 caracteres");
+        return limpia;
     }
 
     private static void enRango(Integer valor, int min, int max, String que) {

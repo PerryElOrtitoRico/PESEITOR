@@ -1,0 +1,6 @@
+Compiled from "TextosRegistro.java"
+public final class com.rutina.registro.TextosRegistro {
+  private com.rutina.registro.TextosRegistro();
+  public static java.lang.String duracion(java.lang.Integer);
+  public static java.lang.String notas(com.rutina.registro.SesionPlan, com.rutina.registro.SesionRegistro);
+}

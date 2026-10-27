@@ -1,0 +1,9 @@
+Compiled from "OpcionesRedondeo.java"
+public final class com.rutina.service.calculo.OpcionesRedondeo {
+  public static final java.lang.String[] TEXTOS;
+  public static final double[] VALORES;
+  private com.rutina.service.calculo.OpcionesRedondeo();
+  public static int indiceDe(double);
+  public static double valorDe(int);
+  static {};
+}

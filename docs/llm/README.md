@@ -26,3 +26,7 @@ Origen: `Mejorias.md` del vault (Obsidian), 27/10/2026. Contrato: `00-especifica
 ## Planilla
 | Subtarea | Modelo | Ocultos | Correcciones | Quién |
 |---|---|---|---|---|
+| T11a escala de esfuerzo (Pesado/Al límite) | Gemma | 3/3 | 0 | Gemma |
+| T11b opciones del combo de redondeo + cableado en PanelPlantillas | Gemma | 5/5 | 0 | Gemma (cableado: Claude) |
+| T12 nota del registro (JsonRegistro.limpiarNota + tests) | Gemma | 7/7 | 0 | Gemma (cableado y null en llamados: Claude) |
+| T13 textos de duración y notas (TextosRegistro) + columnas en la pestaña Registro | Gemma | 6/6 | 0 | Gemma (cableado: Claude) |

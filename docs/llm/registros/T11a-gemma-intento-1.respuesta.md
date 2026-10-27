@@ -1,0 +1,61 @@
+```java
+// src/main/java/com/rutina/registro/EscalaEsfuerzo.java
+package com.rutina.registro;
+
+/** Sensación de un ejercicio (1 = muy liviano, 5 = pesado (no salió)). */
+public enum EscalaEsfuerzo {
+    MUY_LIVIANO(1, "Muy liviano"),
+    LIVIANO(2, "Liviano"),
+    JUSTO(3, "Justo"),
+    AL_LIMITE(4, "Al límite"),
+    PESADO(5, "Pesado");
+
+    private final int valor;
+    private final String texto;
+
+    EscalaEsfuerzo(int valor, String texto) {
+        this.valor = valor;
+        this.texto = texto;
+    }
+
+    /** Valor numérico de la escala (el que va en el JSON). */
+    public int valor() {
+        return valor;
+    }
+
+    /** Texto que ve el usuario. */
+    public String texto() {
+        return texto;
+    }
+
+    /** Lanza IllegalArgumentException si no existe ese valor. */
+    public static EscalaEsfuerzo deValor(int valor) {
+        for (EscalaEsfuerzo e : values()) {
+            if (e.valor == valor) return e;
+        }
+        throw new IllegalArgumentException("valor de EscalaEsfuerzo inexistente: " + valor);
+    }
+}
+```
+
+```java
+// src/test/java/com/rutina/registro/EscalaEsfuerzoOrdenTest.java
+package com.rutina.registro;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class EscalaEsfuerzoOrdenTest {
+
+    @Test
+    void alLimiteYPesadoIntercambiados() {
+        assertEquals(EscalaEsfuerzo.AL_LIMITE, EscalaEsfuerzo.deValor(4));
+        assertEquals("Al límite", EscalaEsfuerzo.deValor(4).texto());
+        assertEquals("Pesado", EscalaEsfuerzo.deValor(5).texto());
+        assertEquals(EscalaEsfuerzo.PESADO, EscalaEsfuerzo.values()[4]);
+    }
+}
+```
+
+<!-- 27 s · entrada 1438 · salida 523 · finish_reason stop -->

@@ -23,7 +23,7 @@ class RegistroRepoTest {
 
     private static RegistroCelular registro(long mesocicloId, String casilla) {
         return new RegistroCelular(RegistroCelular.FORMATO, 1, "Franco", mesocicloId, List.of(
-                new SesionRegistro(1, 1, "2026-10-27", 5, 4, List.of(new EjercicioRegistro("1-1", 3, Map.of("80-85", casilla))))));
+                new SesionRegistro(1, 1, "2026-10-27", 5, 4, List.of(new EjercicioRegistro("1-1", 3, Map.of("80-85", casilla), null)), null)));
     }
 
     private static int filas(Database db) throws Exception {

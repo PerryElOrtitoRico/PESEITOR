@@ -7,6 +7,7 @@ import com.rutina.model.Plantilla;
 import com.rutina.model.Tipo;
 import com.rutina.model.VarianteMicro;
 import com.rutina.model.Zona;
+import com.rutina.service.calculo.OpcionesRedondeo;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -30,7 +31,7 @@ final class PanelPlantillas extends JPanel {
     private final Contexto ctx;
     private Metodologia m;
     private final JTabbedPane tabs = new JTabbedPane();
-    private final JComboBox<String> incremento = new JComboBox<>(new String[]{"1 kg", "2,5 kg"});
+    private final JComboBox<String> incremento = new JComboBox<>(OpcionesRedondeo.TEXTOS);
     /** Tablas visibles: al guardar se confirma la celda que se esté editando. */
     private static final java.util.List<JTable> TABLAS = new ArrayList<>();
 
@@ -73,7 +74,7 @@ final class PanelPlantillas extends JPanel {
         tabs.addTab("Fuerza básica e hipertrofia", new EditorPlantillas());
         tabs.addTab("Pliometría", new EditorPlio());
         tabs.setSelectedIndex(Math.min(sel, tabs.getTabCount() - 1));
-        incremento.setSelectedIndex(m.incrementoKg() == 2.5 ? 1 : 0);
+        incremento.setSelectedIndex(OpcionesRedondeo.indiceDe(m.incrementoKg()));
     }
 
     private void guardar() {
@@ -96,7 +97,7 @@ final class PanelPlantillas extends JPanel {
         }
         try {
             Metodologia nueva = new Metodologia(m.variantes(), m.diaPct(), m.ref(), m.repsPorSerie(), m.plantillas(),
-                    m.volPlio(), incremento.getSelectedIndex() == 1 ? 2.5 : 1.0);
+                    m.volPlio(), OpcionesRedondeo.valorDe(incremento.getSelectedIndex()));
             ctx.metodologiaRepo.guardar(nueva);
             ctx.recargarMetodologia();
             ctx.cambio();

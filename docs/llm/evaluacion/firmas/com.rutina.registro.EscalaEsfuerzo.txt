@@ -1,0 +1,19 @@
+Compiled from "EscalaEsfuerzo.java"
+public final class com.rutina.registro.EscalaEsfuerzo extends java.lang.Enum<com.rutina.registro.EscalaEsfuerzo> {
+  public static final com.rutina.registro.EscalaEsfuerzo MUY_LIVIANO;
+  public static final com.rutina.registro.EscalaEsfuerzo LIVIANO;
+  public static final com.rutina.registro.EscalaEsfuerzo JUSTO;
+  public static final com.rutina.registro.EscalaEsfuerzo AL_LIMITE;
+  public static final com.rutina.registro.EscalaEsfuerzo PESADO;
+  private final int valor;
+  private final java.lang.String texto;
+  private static final com.rutina.registro.EscalaEsfuerzo[] $VALUES;
+  public static com.rutina.registro.EscalaEsfuerzo[] values();
+  public static com.rutina.registro.EscalaEsfuerzo valueOf(java.lang.String);
+  private com.rutina.registro.EscalaEsfuerzo(int, java.lang.String);
+  public int valor();
+  public java.lang.String texto();
+  public static com.rutina.registro.EscalaEsfuerzo deValor(int);
+  private static com.rutina.registro.EscalaEsfuerzo[] $values();
+  static {};
+}

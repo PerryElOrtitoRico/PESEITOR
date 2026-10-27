@@ -10,8 +10,9 @@ import java.util.List;
  * @param fecha          AAAA-MM-DD
  * @param descanso       valor de {@link EscalaDescanso}; null si no se anotó
  * @param sensacionFinal valor de {@link EscalaFinal}; null si no se anotó (en el JSON la clave es "final")
+ * @param duracionMin    minutos de la sesión (1 a 600); null si no se midió
  */
 public record SesionRegistro(int microciclo, int dia, String fecha, Integer descanso,
                              @SerializedName("final") Integer sensacionFinal,
-                             List<EjercicioRegistro> ejercicios) {
+                             List<EjercicioRegistro> ejercicios, Integer duracionMin) {
 }

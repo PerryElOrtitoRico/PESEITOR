@@ -31,8 +31,8 @@ class JsonRegistroTest {
     @Test
     void idaYVuelta() {
         var r = new RegistroCelular(RegistroCelular.FORMATO, 1, "Franco", 3, List.of(
-                new SesionRegistro(1, 1, "2026-10-27", 5, 4, List.of(new EjercicioRegistro("1-1", 3, Map.of("80-85", "3.3")))),
-                new SesionRegistro(1, 2, "2026-10-29", null, null, List.of())));
+                new SesionRegistro(1, 1, "2026-10-27", 5, 4, List.of(new EjercicioRegistro("1-1", 3, Map.of("80-85", "3.3"), null)), null),
+                new SesionRegistro(1, 2, "2026-10-29", null, null, List.of(), null)));
         String json = JsonRegistro.registroAJson(r);
         assertTrue(json.contains("\"final\""));
         assertFalse(json.contains("sensacionFinal"));

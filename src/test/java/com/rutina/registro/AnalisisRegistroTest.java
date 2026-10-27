@@ -70,7 +70,7 @@ class AnalisisRegistroTest {
     @Test
     void notacionInvalidaDiceDonde() {
         var r = new RegistroCelular(RegistroCelular.FORMATO, 1, "F", 3, List.of(new SesionRegistro(1, 1, "2026-10-27", null, null,
-                List.of(new EjercicioRegistro("1-1", null, Map.of("80-85", "3..3"))))));
+                List.of(new EjercicioRegistro("1-1", null, Map.of("80-85", "3..3"), null)), null)));
         var e = assertThrows(IllegalArgumentException.class, () -> AnalisisRegistro.analizar(plan, r));
         assertTrue(e.getMessage().contains("1-1"), e.getMessage());
         assertTrue(e.getMessage().contains("80-85"), e.getMessage());
