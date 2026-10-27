@@ -48,3 +48,8 @@ Verificada antes de mandar (5/5 con los pasos tal cual). 52 s, entrada 3128, sal
 ## Tarea 6 (Claude): lo que no se delegó y por qué
 - `VistaEjercicio`, `SesionActivity`, `Escalas`, layouts XML: vistas y cableado, hechos por Claude (regla de qwen-aprendizajes: el modelo solo recibe lógica pura).
 - Se sacó del Activity la regla "cuándo guardar" a `GuardadoSesion.hayQueGuardar` (con 5 tests de Claude) porque el Spinner dispara `onItemSelected` solo al abrir la pantalla y sin esa regla abrir una sesión creaba una sesión vacía con fecha.
+
+## Tarea 7 (Claude) y balance
+- `DuracionSesion` (`estadoInicial`, `paraGuardar`) con 3 tests de Claude: si el registro ya trae `duracionMin` (anotado en la PC) y el cronómetro nunca se arrancó, la pantalla arranca con esa duración y guardar no la pisa con null.
+- `NotificacionCrono` con `setUsesChronometer` y `setWhen(ahora - ms)`; el permiso `POST_NOTIFICATIONS` se pide una vez por proceso al iniciar; sin él el cronómetro anda sin notificación. El estado del cronómetro sale de `desde` (Foco 5) y la pantalla lo relee en `onResume`.
+- Balance de la corrida: 10 subtareas de modelo (7 Gemma/qwen al primer pedido sin tocar, 2 con un pedido extra solo del test, 1 con extractor ajustado), 0 correcciones de código, 0 subtareas frenadas, 0 hechas por Claude. Hecho por Claude: Gradle/SDK, tema, vistas, Activities, `Fechas`, `GuardadoSesion`, `DuracionSesion`, `NotificacionCrono`.
