@@ -19,13 +19,22 @@ self.addEventListener("activate", evento => {
 
 /** Recibe el plan que Android manda por Compartir (POST multipart a ./compartir). */
 async function recibirPlanCompartido(pedido) {
-  // TODO T24
-  throw new Error("T24");
+  const datos = await pedido.formData();
+  const archivo = datos.get("plan");
+  if (archivo) {
+    const texto = await archivo.text();
+    const cache = await caches.open(CACHE_COMPARTIDO);
+    await cache.put("./compartido.json", new Response(texto));
+  }
+  return Response.redirect("./?compartido=1", 303);
 }
 
 // Primero el cache; si no está, la red.
 self.addEventListener("fetch", evento => {
-  // TODO T24
+  if (evento.request.method === "POST" && new URL(evento.request.url).pathname.endsWith("/compartir")) {
+    evento.respondWith(recibirPlanCompartido(evento.request));
+    return;
+  }
   if (evento.request.method !== "GET") return;
   evento.respondWith(caches.match(evento.request).then(respuesta => respuesta || fetch(evento.request)));
 });

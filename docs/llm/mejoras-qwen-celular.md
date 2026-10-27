@@ -13,3 +13,7 @@ Una entrada por pedido: tarea, modelo, intento, resultado, qué falló, por qué
 ## T23 — `limpiarSesion` con nota · qwen · intento 1 · OK (2/2 ocultos de T23; las 15 pruebas viejas siguen en verde)
 - 278 s, entrada 3708, salida 2871, `finish_reason: stop`. Copió los cinco pasos en el lugar del `// TODO T23`; diff limpio, el resto del archivo idéntico.
 - El esqueleto con el cuerpo viejo funcionando + un `// TODO` donde cambiar (en vez de `throw`) funcionó bien para una modificación de función existente.
+
+## T24 — share target en `sw.js` · qwen · intento 1 · OK (4/4 ocultos de T24)
+- 50 s, entrada 1486, salida 477, `finish_reason: stop`. Con el código de `recibirPlanCompartido` y del `if` dado casi literal en la tarea, lo copió sin cambios. Un archivo chico de ~35 líneas hace que el pedido sea 5 veces más rápido que con `logica.js` entero.
+- Regla (JS, sw.js): para APIs del service worker (formData, caches, Response.redirect), darlas literales en la tarea. Lo que atrapa errores aquí es la prueba con `self`/`caches` falsos, no el modelo.
