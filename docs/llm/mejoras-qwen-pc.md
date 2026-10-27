@@ -11,3 +11,8 @@ Una entrada por pedido: tarea, modelo, intento, resultado, qué falló, por qué
 - Resultado: ocultos 5/5 al primer pedido con `--metodos`, 17 s, entrada 1342, salida 304. Tests propios copiados tal cual, sin comentarios.
 - Decisión mía: la lógica del combo (índice ↔ valor) salió de `PanelPlantillas` a `service.calculo.OpcionesRedondeo` para poder testearla sin Swing; el cableado del combo lo hice yo.
 - Qué se cambia: nada.
+
+## T12 — Gemma, intento 1 (JsonRegistro.limpiarNota + tests de duración y nota)
+- Resultado: ocultos 7/7 al primer pedido con `--metodos`, 46 s, entrada 3737, salida 655. `git diff` fuera del método pedido: nada (lo único fuera de `limpiarNota` es mi cableado en `registroDeJson`). Tests propios con las 12 aserciones de la tarea, sin comentarios.
+- Qué ayudó: yo dejé hecho en `registroDeJson` la llamada, el `enRango` de la duración y el armado de los records; el modelo recibió solo el helper de 4 pasos y los tests con los strings JSON ya escapados (las comillas escapadas se copiaron bien).
+- Qué se cambia: nada.

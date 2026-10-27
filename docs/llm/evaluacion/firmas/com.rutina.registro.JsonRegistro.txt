@@ -1,0 +1,14 @@
+Compiled from "JsonRegistro.java"
+public final class com.rutina.registro.JsonRegistro {
+  private static final com.google.gson.Gson GSON;
+  private com.rutina.registro.JsonRegistro();
+  public static java.lang.String planAJson(com.rutina.registro.PlanCelular);
+  public static com.rutina.registro.PlanCelular planDeJson(java.lang.String);
+  public static void escribirPlan(java.nio.file.Path, com.rutina.registro.PlanCelular) throws java.io.IOException;
+  public static com.rutina.registro.RegistroCelular registroDeJson(java.lang.String);
+  public static com.rutina.registro.RegistroCelular leerRegistro(java.nio.file.Path) throws java.io.IOException;
+  public static java.lang.String registroAJson(com.rutina.registro.RegistroCelular);
+  static java.lang.String limpiarNota(java.lang.String, java.lang.String);
+  private static void enRango(java.lang.Integer, int, int, java.lang.String);
+  static {};
+}
