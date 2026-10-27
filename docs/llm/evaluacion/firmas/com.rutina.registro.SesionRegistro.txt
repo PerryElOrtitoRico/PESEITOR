@@ -1,0 +1,21 @@
+Compiled from "SesionRegistro.java"
+public final class com.rutina.registro.SesionRegistro extends java.lang.Record {
+  private final int microciclo;
+  private final int dia;
+  private final java.lang.String fecha;
+  private final java.lang.Integer descanso;
+  private final java.lang.Integer sensacionFinal;
+  private final java.util.List<com.rutina.registro.EjercicioRegistro> ejercicios;
+  private final java.lang.Integer duracionMin;
+  public com.rutina.registro.SesionRegistro(int, int, java.lang.String, java.lang.Integer, java.lang.Integer, java.util.List<com.rutina.registro.EjercicioRegistro>, java.lang.Integer);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public int microciclo();
+  public int dia();
+  public java.lang.String fecha();
+  public java.lang.Integer descanso();
+  public java.lang.Integer sensacionFinal();
+  public java.util.List<com.rutina.registro.EjercicioRegistro> ejercicios();
+  public java.lang.Integer duracionMin();
+}

@@ -31,7 +31,7 @@ flowchart LR
 | 2 | Mal descansado |
 | 1 | Mal descansado y sin ganas de entrenar |
 
-**Sensación del ejercicio** (una por ejercicio): 1 Muy liviano · 2 Liviano · 3 Justo · 4 Pesado · 5 Al límite
+**Sensación del ejercicio** (una por ejercicio): 1 Muy liviano · 2 Liviano · 3 Justo · 4 Al límite · 5 Pesado
 
 **Sensación al terminar**: 1 Destruido · 2 Cansado · 3 Normal · 4 Bien · 5 Con energía
 
