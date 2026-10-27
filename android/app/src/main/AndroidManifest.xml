@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Solo para mostrar el cronómetro en una notificación (Android 13 o más); sin ella el cronómetro anda igual -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".App"
         android:allowBackup="false"
@@ -49,7 +52,9 @@
 
         <activity
             android:name=".ui.SesionActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:parentActivityName=".ui.MainActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

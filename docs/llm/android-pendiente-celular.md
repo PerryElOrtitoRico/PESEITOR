@@ -34,3 +34,13 @@ Con el plan de ejemplo (Franco, mesociclo 3: Sentadilla con filas `70` y `80-85`
 - [ ] Día sin ejercicios (microciclo 1, día 2 del ejemplo): "Este día no tiene ejercicios".
 - [ ] "Borrar lo anotado en esta sesión": pide confirmación y deja la pantalla vacía; sin nada anotado avisa "Esta sesión no tiene nada anotado."
 - [ ] Modo oscuro: los recuadros, la grilla y los bordes rojos se ven bien en los dos modos.
+
+## Tarea 7 — cronómetro con notificación
+- [ ] En la barra de la sesión, a la derecha, el tiempo `0:00:00`; debajo dos botones: **Iniciar** (después Pausar / Reanudar) y **Editar duración**.
+- [ ] Iniciar: el tiempo avanza cada segundo. En Android 13 o más aparece una vez el pedido de permiso de notificaciones; si se lo niega, el cronómetro anda igual sin notificación (y no se vuelve a pedir hasta reabrir la app).
+- [ ] Con el permiso: notificación en curso "Microciclo N · Día M — Cronómetro en marcha" con el tiempo corriendo (canal "Cronómetro"). Tocarla abre la sesión. Pausar la quita.
+- [ ] Apagar la pantalla 2 minutos: la notificación sigue contando; al volver, la app muestra el mismo tiempo.
+- [ ] **Foco 5:** con el cronómetro corriendo, `adb shell am force-stop com.rutina.app` (o cerrarla desde recientes) y reabrir la sesión: el tiempo es el correcto (cuenta el tiempo que pasó cerrada) y la notificación vuelve. Probar también reiniciando el celular con el cronómetro corriendo.
+- [ ] "Editar duración": campo numérico con los minutos actuales; escribir `75` cambia el tiempo a `1:15:00` y para el cronómetro; `0`, `601` o vacío muestran "Escribí los minutos, de 1 a 600" y no cambian nada.
+- [ ] La duración se guarda en el registro (`duracionMin`): al pausar, al editar, al salir y cada 30 s mientras corre. Exportar el registro y abrirlo en la PC: la pestaña Registro muestra "75 min".
+- [ ] "Borrar lo anotado en esta sesión" también pone el cronómetro en cero y quita la notificación.
