@@ -44,3 +44,7 @@ Plan: `docs/superpowers/plans/2026-10-27-app-android.md`. Contrato: secciones 10
 | T31b `Sesiones`: limpiarSesion, guardarSesion | qwen | 6/6 | 0 | qwen |
 | T32 `Totales` | Gemma | 3/3 | 0 | Gemma |
 | T33 `Crono` | Gemma | 5/5 | 0 | Gemma |
+| T34a `Almacen`: escritura atómica y lectura con respaldo | qwen | 5/5 | 0 (+1 pedido solo del test) | qwen |
+| T34d `Almacen.cargarDesdeTexto` | qwen | 5/5 | 0 (+1 pedido solo del test; extractor ajustado) | qwen |
+| T34b `Almacen`: preferencias | Gemma | 5/5 | 0 | Gemma |
+| T34c `Almacen`: planes, borrar, cronómetros | Gemma | 4/4 (+7/7 focos T34z) | 0 | Gemma |

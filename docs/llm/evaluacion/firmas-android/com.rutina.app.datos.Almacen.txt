@@ -1,0 +1,29 @@
+Compiled from "Almacen.java"
+public class com.rutina.app.datos.Almacen {
+  private static final com.google.gson.Gson GSON;
+  private final java.nio.file.Path raiz;
+  public com.rutina.app.datos.Almacen(java.nio.file.Path);
+  java.nio.file.Path archivoPlan(long);
+  java.nio.file.Path archivoRegistro(long);
+  java.nio.file.Path archivoPreferencias();
+  static java.lang.String leerTexto(java.nio.file.Path) throws java.io.IOException;
+  static void escribirAtomico(java.nio.file.Path, java.lang.String) throws java.io.IOException;
+  static void apartarRoto(java.nio.file.Path);
+  static com.rutina.registro.PlanCelular leerPlan(java.nio.file.Path);
+  static com.rutina.registro.RegistroCelular leerRegistro(java.nio.file.Path);
+  public com.rutina.registro.PlanCelular plan(long);
+  public com.rutina.registro.RegistroCelular registro(long);
+  public void guardarRegistro(com.rutina.registro.RegistroCelular) throws java.io.IOException;
+  public java.lang.Object cargarDesdeTexto(java.lang.String) throws java.io.IOException;
+  public java.util.List<com.rutina.registro.PlanCelular> planes();
+  public void borrarPlan(long) throws java.io.IOException;
+  com.google.gson.JsonObject leerPreferencias();
+  void guardarPreferencias(com.google.gson.JsonObject) throws java.io.IOException;
+  public java.lang.Long activo();
+  public void activo(java.lang.Long) throws java.io.IOException;
+  public boolean oscuro();
+  public void oscuro(boolean) throws java.io.IOException;
+  public com.rutina.app.logica.EstadoCrono crono(long, int, int);
+  public void crono(long, int, int, com.rutina.app.logica.EstadoCrono) throws java.io.IOException;
+  static {};
+}

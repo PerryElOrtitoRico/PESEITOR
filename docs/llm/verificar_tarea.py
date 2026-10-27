@@ -2,7 +2,8 @@
 """Verifica una tarea ANTES de mandarla: aplica sus pasos de código tal cual (sacados del propio .md) a los
 esqueletos, corre propios + ocultos y vuelve a dejar los esqueletos como estaban.
 
-Uso: python3 docs/llm/verificar_tarea.py docs/llm/tareas/T31a-….md [--dejar]
+Uso: python3 docs/llm/verificar_tarea.py docs/llm/tareas/T31a-….md [--con otra.md,otra2.md] [--dejar]
+--con: aplica antes los pasos de esas tareas (para las subtareas que dependen de otras todavía sin pedir).
 En el .md: `## `firma` (pasos en orden)` seguido de líneas `N. `código``, y en `## Tests` los items
 `- `nombreDelTest`:` con sub-items `  - `aserción``. Con --dejar no restaura los archivos (para inspeccionar).
 """
@@ -51,32 +52,43 @@ def reemplazar_cuerpo(codigo, nombre, lineas, tid):
     raise SystemExit(f"no encontré {nombre} con TODO {tid}")
 
 
-def main():
-    tarea = pathlib.Path(sys.argv[1])
-    dejar = "--dejar" in sys.argv
+def aplicar(tarea, originales):
+    """Aplica los pasos de código y las aserciones de la tarea sobre los archivos (que se guardan en originales)."""
     texto = tarea.read_text(encoding="utf-8")
     m = re.match(r"<!--\s*contrato:\s*([\d,\s]*)\|\s*archivos:\s*(.*?)\s*-->", texto)
     archivos = [a.strip() for a in m.group(2).split(",")]
     tid = tarea.name.split("-")[0]
     src = [a for a in archivos if "/src/main/" in a][0]
     tst = [a for a in archivos if "/src/test/" in a][0]
-    originales = {a: (REPO / a).read_text(encoding="utf-8") for a in archivos}
+    for a in archivos:
+        originales.setdefault(a, (REPO / a).read_text(encoding="utf-8"))
+    codigo = (REPO / src).read_text(encoding="utf-8")
+    for sec in re.split(r"(?m)^(?=## )", texto):
+        h = re.match(r"## `(?:[\w<>\[\], ?.]+\s+)?(\w+)\(.*?\)` \(pasos", sec)
+        if h:
+            lineas = re.findall(r"(?m)^\d+\. `(.*)`\s*$", sec)
+            codigo = reemplazar_cuerpo(codigo, h.group(1), lineas, tid)
+    (REPO / src).write_text(codigo, encoding="utf-8")
+    ct = (REPO / tst).read_text(encoding="utf-8")
+    sec = texto[texto.index("## Tests"):]
+    for h in re.finditer(r"(?m)^- `(\w+)`:\s*\n((?:  - `.*`\s*\n?)+)", sec):
+        lineas = re.findall(r"(?m)^  - `(.*)`\s*$", h.group(2))
+        ct = reemplazar_cuerpo(ct, h.group(1), lineas, tid)
+    (REPO / tst).write_text(ct, encoding="utf-8")
+    return tid
+
+
+def main():
+    tarea = pathlib.Path(sys.argv[1])
+    dejar = "--dejar" in sys.argv
+    previas = []
+    if "--con" in sys.argv:
+        previas = [pathlib.Path(x) for x in sys.argv[sys.argv.index("--con") + 1].split(",")]
+    originales = {}
     try:
-        codigo = originales[src]
-        # métodos: "## `metodo(...)` (pasos…)" + líneas "N. `código`"
-        for sec in re.split(r"(?m)^(?=## )", texto):
-            h = re.match(r"## `(?:[\w<>\[\], ?.]+\s+)?(\w+)\(.*?\)` \(pasos", sec)
-            if h:
-                lineas = re.findall(r"(?m)^\d+\. `(.*)`\s*$", sec)
-                codigo = reemplazar_cuerpo(codigo, h.group(1), lineas, tid)
-        (REPO / src).write_text(codigo, encoding="utf-8")
-        # tests
-        ct = originales[tst]
-        sec = texto[texto.index("## Tests"):]
-        for h in re.finditer(r"(?m)^- `(\w+)`:\s*\n((?:  - `.*`\s*\n?)+)", sec):
-            lineas = re.findall(r"(?m)^  - `(.*)`\s*$", h.group(2))
-            ct = reemplazar_cuerpo(ct, h.group(1), lineas, tid)
-        (REPO / tst).write_text(ct, encoding="utf-8")
+        for p in previas:
+            aplicar(p, originales)
+        tid = aplicar(tarea, originales)
         r = subprocess.run([str(REPO / "docs/llm/evaluar-android.sh"), tid], cwd=REPO, text=True, capture_output=True)
         print(r.stdout, r.stderr)
     finally:

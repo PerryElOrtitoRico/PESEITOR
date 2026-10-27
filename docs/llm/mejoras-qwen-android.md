@@ -21,3 +21,23 @@ Método: `qwen-aprendizajes.md`. Herramientas nuevas para Android: `docs/llm/eva
 ## Lo que aprendí de la Tarea 2
 - Con la misma receta de las ramas anteriores (esqueleto + pasos de código en orden + aserciones exactas + `--metodos` + verificación previa) las 4 subtareas de Android pasaron al primer pedido, 0 correcciones.
 - `restaurar.sh` hay que correrlo sobre los archivos de la tarea tras cada pedido (incluido `--solo-ver`, que también reescribe los marcadores); si no, el siguiente `aceptar.sh` no encuentra los `// TODO`.
+
+## Antes de pedir (Tarea 3)
+- `Almacen` se partió en cuatro subtareas con el cableado hecho por Claude (rutas `archivoPlan/archivoRegistro/archivoPreferencias`, `plan(id)`, `registro(id)`, `guardarRegistro`) y los helpers de disco como métodos package-private estáticos, para poder probarlos sin depender del resto.
+- `verificar_tarea.py` ganó `--con otra.md,…`: aplica antes los pasos de las subtareas de las que depende (T34b necesita T34a, T34c necesita T34a+T34b, T34d necesita T34a). Primera corrida: 3 de 4 fallaban por dependencias de los ocultos (usaban `planes()` o `escribirAtomico` de otra subtarea). Cambio: cada oculto usa solo lo de su subtarea más lo declarado en `--con`; y un `T34zFocosOcultoTest` aparte, con todo hecho, para los focos 1–4 del plan.
+- Se agregó al contrato (secciones 14) lo que no estaba: BOM `\uFEFF` al principio del texto (WhatsApp/Windows) y que `borrarPlan` deja `activo()` en `null` si era el activo.
+
+## T34a — disco (qwen, intentos 1 y 2)
+Intento 1: 34 s, entrada 4703, salida 329. Los 5 métodos salieron literales y 5/5 ocultos, pero **no devolvió el bloque del test** (`FALTA en la respuesta AlmacenTest`). Causa: con dos archivos en el pedido y `--metodos` contestó solo el primero; la tarea no decía cuántos bloques devolver. Intento 2 con `--solo AlmacenTest.java --metodos` (3029 de entrada, 25 s): `escribeYRelee` y `apartaElRoto` bien. Cambio: las tareas siguientes dicen "Devolvé DOS bloques: uno con los métodos de X y otro con los tests de Y".
+
+## T34d — `cargarDesdeTexto` (qwen, intentos 1 y 2)
+Intento 1: 199 s, entrada 4931, salida 2035. **Devolvió el archivo entero** (en vez de solo los métodos), sin ``` ni `//` delante de la ruta (una línea suelta `android/app/src/….java`), y otra vez sin el test. El código de `cargarDesdeTexto` era exactamente el de los pasos. `pedir.py` no extrajo nada. Cambios: (1) `RUTA_LINEA` acepta la ruta sin `//`; con `--reextraer` el injerto por nombre sacó el método bien (y los otros métodos, idénticos, no cambiaron); (2) intento 2 solo del test (3324 de entrada, 29 s). 5/5 ocultos. Lección: con 20 pasos de código y ~5000 tokens de entrada qwen empieza a ignorar "solo los métodos"; conviene dar menos contexto (el esqueleto entero del archivo pesa).
+
+## T34b — preferencias (Gemma, intento 1)
+50 s, entrada 5719, salida 614. 5/5 ocultos; devolvió los dos bloques (por la frase nueva). Nada que corregir.
+
+## T34c — planes, borrar, cronómetros (Gemma, intento 1)
+90 s, entrada 6594, salida 1088. 4/4 ocultos; dos bloques. El `try-with-resources` con `DirectoryStream` y el `keySet()` copiado antes de borrar salieron literales. Nada que corregir.
+
+## Total Tarea 3
+`T34z` (focos 1–4 con todo junto): 7/7. 0 correcciones de código; 2 pedidos extra de solo test (T34a, T34d) por bloques faltantes.

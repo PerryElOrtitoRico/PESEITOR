@@ -95,7 +95,7 @@ def marcar_todos(codigo, tarea_id):
     return re.sub(r"// TODO (T\w+)", cambiar, codigo)
 
 
-RUTA_LINEA = r"(?m)^\s*(?://|<!--)\s*((?:src|celular|android)/\S+\.(?:java|js|html|webmanifest))\s*(?:-->)?\s*$"
+RUTA_LINEA = r"(?m)^\s*(?://|<!--)?\s*((?:src|celular|android)/\S+\.(?:java|js|html|webmanifest))\s*(?:-->)?\s*$"
 
 
 def extraer_bloques(respuesta):
