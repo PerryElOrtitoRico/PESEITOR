@@ -10,5 +10,11 @@
   "theme_color": "#1f6feb",
   "icons": [
     { "src": "icono.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
-  ]
+  ],
+  "share_target": {
+    "action": "./compartir",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": { "files": [{ "name": "plan", "accept": ["application/json", ".json", "text/plain", "application/octet-stream"] }] }
+  }
 }

@@ -84,7 +84,8 @@ const Logica = {
   },
 
   /** Copia de la sesión sin ruido: saca de cada ejercicio las filas con texto vacío o solo espacios (y recorta
-   *  los espacios del resto), y saca los ejercicios que quedan sin filas y con esfuerzo null. */
+   *  los espacios del resto). A cada ejercicio le recorta la nota (trim); nota vacía → se borra la clave `nota`.
+   *  Un ejercicio se conserva si tiene filas o esfuerzo o nota. */
   limpiarSesion(sesion) {
     const ejercicios = [];
     for (const ej of sesion.ejercicios || []) {
@@ -94,8 +95,11 @@ const Logica = {
         if (t !== "") filas[etiqueta] = t;
       }
       const esfuerzo = ej.esfuerzo === undefined ? null : ej.esfuerzo;
-      if (Object.keys(filas).length === 0 && esfuerzo === null) continue;
-      ejercicios.push({ bloque: ej.bloque, esfuerzo, filas });
+      const nota = typeof ej.nota === "string" ? ej.nota.trim() : "";
+      if (Object.keys(filas).length === 0 && esfuerzo === null && nota === "") continue;
+      const limpio = { bloque: ej.bloque, esfuerzo, filas };
+      if (nota !== "") limpio.nota = nota;
+      ejercicios.push(limpio);
     }
     return Object.assign({}, sesion, { ejercicios });
   },
@@ -111,6 +115,86 @@ const Logica = {
     }
     if (kgs.length === 0) return reps;
     return reps + " · " + kgs.map(k => String(k).replace(".", ",")).join("/");
+  },
+
+  /** Suma de reps de una lista de series [{reps, kg}]. [] → 0. */
+  totalReps(series) {
+    let total = 0;
+    for (const s of series) total += s.reps;
+    return total;
+  },
+
+  /** filasPlan: [{etiqueta, series}] del plan; textos: { etiqueta: texto } anotado.
+   *  Por fila: texto ausente o en blanco → reps planificadas de esa fila; texto válido → reps de parseNotacion(texto, series);
+   *  texto inválido → todo el resultado tiene hechas = null.
+   *  Devuelve { planificadas, hechas }. */
+  totalesEjercicio(filasPlan, textos) {
+    let planificadas = 0;
+    let hechas = 0;
+    for (const fila of filasPlan) {
+      const plan = Logica.totalReps(fila.series);
+      planificadas += plan;
+      if (hechas === null) continue;
+      const texto = textos[fila.etiqueta];
+      if (typeof texto !== "string" || texto.trim() === "") {
+        hechas += plan;
+        continue;
+      }
+      if (!Logica.esNotacionValida(texto, fila.series)) {
+        hechas = null;
+        continue;
+      }
+      hechas += Logica.totalReps(Logica.parseNotacion(texto, fila.series));
+    }
+    return { planificadas, hechas };
+  },
+
+  /** Estado: { acumuladoMs, desde } (desde = epoch ms si está corriendo, null si está parado). */
+  cronoNuevo() {
+    return { acumuladoMs: 0, desde: null };
+  },
+
+  /** Si ya corre, devuelve una copia igual; si no, { acumuladoMs, desde: ahora }. */
+  cronoIniciar(estado, ahora) {
+    if (estado.desde !== null) return { acumuladoMs: estado.acumuladoMs, desde: estado.desde };
+    return { acumuladoMs: estado.acumuladoMs, desde: ahora };
+  },
+
+  /** Si corre: { acumuladoMs: acumuladoMs + (ahora - desde), desde: null }; si no, copia igual. */
+  cronoPausar(estado, ahora) {
+    if (estado.desde === null) return { acumuladoMs: estado.acumuladoMs, desde: null };
+    return { acumuladoMs: estado.acumuladoMs + (ahora - estado.desde), desde: null };
+  },
+
+  /** acumuladoMs + (desde === null ? 0 : ahora - desde). */
+  cronoMs(estado, ahora) {
+    return estado.acumuladoMs + (estado.desde === null ? 0 : ahora - estado.desde);
+  },
+
+  /** "h:mm:ss" sin redondear: 0 → "0:00:00", 75_500 → "0:01:15", 3_725_000 → "1:02:05". */
+  cronoTexto(ms) {
+    const total = Math.floor(ms / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    return h + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+  },
+
+  /** 0 → null; si no, Math.max(1, Math.round(ms / 60000)): 29_999 → 1, 90_000 → 2, 4_500_000 → 75. */
+  minutosDe(ms) {
+    if (!(ms > 0)) return null;
+    return Math.max(1, Math.round(ms / 60000));
+  },
+
+  /** Texto que escribe el usuario en minutos → entero 1..600, o null si es inválido.
+   *  Acepta espacios alrededor; solo dígitos. "75" → 75, " 5 " → 5, "0" → null, "601" → null, "7,5" → null, "" → null. */
+  duracionValida(texto) {
+    if (typeof texto !== "string") return null;
+    const t = texto.trim();
+    if (!/^[0-9]+$/.test(t)) return null;
+    const n = Number(t);
+    if (n < 1 || n > 600) return null;
+    return n;
   },
 
   /** "registro-<perfil>-<inicio>.json", con los espacios del perfil cambiados por "_". */

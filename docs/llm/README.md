@@ -30,3 +30,7 @@ Origen: `Mejorias.md` del vault (Obsidian), 27/10/2026. Contrato: `00-especifica
 | T11b opciones del combo de redondeo + cableado en PanelPlantillas | Gemma | 5/5 | 0 | Gemma (cableado: Claude) |
 | T12 nota del registro (JsonRegistro.limpiarNota + tests) | Gemma | 7/7 | 0 | Gemma (cableado y null en llamados: Claude) |
 | T13 textos de duración y notas (TextosRegistro) + columnas en la pestaña Registro | Gemma | 6/6 | 0 | Gemma (cableado: Claude) |
+| T21 totales de reps (`totalReps`, `totalesEjercicio`) | Gemma | 4/4 | 0 | Gemma |
+| T22 funciones del cronómetro (7 funciones) | Gemma | 7/7 | 0 | Gemma |
+| T23 `limpiarSesion` con nota | qwen | 2/2 (+15 viejas) | 0 | qwen |
+| T24 share target en `sw.js` | qwen | 4/4 | 0 | qwen |
