@@ -1,3 +1,8 @@
 # Retrospectiva por pedido — rama llm/mejoras-celular
 
 Una entrada por pedido: tarea, modelo, intento, resultado, qué falló, por qué y qué se cambia en el pedido siguiente.
+
+## T21 — totales de reps · Gemma · intento 1 · OK (4/4 ocultos de T21)
+- 174 s, entrada 3836, salida 2777 tokens, `finish_reason: stop`. Copió los pasos tal cual; `git diff` limpio fuera de las funciones pedidas.
+- Único ruido: `pedir.py` deja los `// TODO Txx` de otras subtareas como `// lo completa otra subtarea (Txx): no lo cambies` en el archivo. Se agregó `docs/llm/restaurar.sh` para volverlos a `// TODO` después de cada pedido.
+- Con archivo completo (JS) la respuesta es larga (2777 tokens para ~230 líneas): el contexto de 8192 alcanza para el intento 1 pero no deja mucho margen para correcciones; en T22 (7 funciones) vigilar `finish_reason`.

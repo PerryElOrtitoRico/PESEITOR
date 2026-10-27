@@ -117,8 +117,9 @@ const Logica = {
 
   /** Suma de reps de una lista de series [{reps, kg}]. [] → 0. */
   totalReps(series) {
-    // TODO T21
-    throw new Error("T21");
+    let total = 0;
+    for (const s of series) total += s.reps;
+    return total;
   },
 
   /** filasPlan: [{etiqueta, series}] del plan; textos: { etiqueta: texto } anotado.
@@ -126,8 +127,24 @@ const Logica = {
    *  texto inválido → todo el resultado tiene hechas = null.
    *  Devuelve { planificadas, hechas }. */
   totalesEjercicio(filasPlan, textos) {
-    // TODO T21
-    throw new Error("T21");
+    let planificadas = 0;
+    let hechas = 0;
+    for (const fila of filasPlan) {
+      const plan = Logica.totalReps(fila.series);
+      planificadas += plan;
+      if (hechas === null) continue;
+      const texto = textos[fila.etiqueta];
+      if (typeof texto !== "string" || texto.trim() === "") {
+        hechas += plan;
+        continue;
+      }
+      if (!Logica.esNotacionValida(texto, fila.series)) {
+        hechas = null;
+        continue;
+      }
+      hechas += Logica.totalReps(Logica.parseNotacion(texto, fila.series));
+    }
+    return { planificadas, hechas };
   },
 
   /** Estado: { acumuladoMs, desde } (desde = epoch ms si está corriendo, null si está parado). */

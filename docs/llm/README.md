@@ -26,3 +26,4 @@ Origen: `Mejorias.md` del vault (Obsidian), 27/10/2026. Contrato: `00-especifica
 ## Planilla
 | Subtarea | Modelo | Ocultos | Correcciones | Quién |
 |---|---|---|---|---|
+| T21 totales de reps (`totalReps`, `totalesEjercicio`) | Gemma | 4/4 | 0 | Gemma |
