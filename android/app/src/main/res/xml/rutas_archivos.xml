@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Carpeta temporal donde se arma el registro para compartirlo -->
+<paths>
+    <cache-path name="exportados" path="exportados/" />
+</paths>

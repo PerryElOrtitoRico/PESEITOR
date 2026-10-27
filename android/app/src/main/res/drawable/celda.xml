@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Celda de tabla con grilla: dibuja solo su borde derecho e inferior (la tabla pone el izquierdo y el superior) -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/borde" />
+        </shape>
+    </item>
+    <item android:bottom="1dp" android:right="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/campo" />
+        </shape>
+    </item>
+</layer-list>

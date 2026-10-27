@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/info_exportar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/texto"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/compartir_registro"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Compartir registro" />
+
+    <Button
+        android:id="@+id/guardar_descargas"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Guardar en Descargas" />
+
+    <TextView
+        style="@style/Rutina.Etiqueta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="El archivo se abre en el programa de la PC con &quot;Importar registro&quot;." />
+</LinearLayout>

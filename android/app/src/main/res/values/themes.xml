@@ -24,6 +24,11 @@
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">@bool/barra_clara</item>
         <item name="materialButtonStyle">@style/Widget.Rutina.Boton</item>
         <item name="editTextStyle">@style/Widget.Rutina.Campo</item>
+        <item name="spinnerStyle">@style/Widget.Rutina.Desplegable</item>
+        <item name="tabStyle">@style/Widget.Rutina.Pestanas</item>
+        <item name="shapeAppearanceSmallComponent">@style/Forma.Rutina</item>
+        <item name="shapeAppearanceMediumComponent">@style/Forma.Rutina</item>
+        <item name="shapeAppearanceLargeComponent">@style/Forma.Rutina</item>
     </style>
 
     <!-- Botón plano: borde fino, esquinas casi rectas, sin sombra ni mayúsculas -->
@@ -53,8 +58,42 @@
 
     <!-- Desplegable con el mismo borde -->
     <style name="Widget.Rutina.Desplegable" parent="Widget.AppCompat.Spinner">
-        <item name="android:background">@drawable/fondo_campo</item>
+        <item name="android:background">@drawable/fondo_desplegable</item>
+        <item name="android:popupBackground">@color/campo</item>
         <item name="android:minHeight">40dp</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">28dp</item>
+    </style>
+
+    <!-- Pestañas: grises, sin mayúsculas, subrayado azul en la elegida -->
+    <style name="Widget.Rutina.Pestanas" parent="Widget.MaterialComponents.TabLayout">
+        <item name="android:background">@color/barra</item>
+        <item name="tabIndicatorColor">@color/foco</item>
+        <item name="tabIndicatorHeight">2dp</item>
+        <item name="tabTextColor">@color/secundario</item>
+        <item name="tabSelectedTextColor">@color/texto</item>
+        <item name="tabRippleColor">@color/borde</item>
+        <item name="tabTextAppearance">@style/Rutina.TextoPestana</item>
+        <item name="tabMode">fixed</item>
+        <item name="tabGravity">fill</item>
+    </style>
+
+    <style name="Rutina.TextoPestana" parent="TextAppearance.MaterialComponents.Button">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <!-- Esquinas casi rectas (3 dp) en todo -->
+    <style name="Forma.Rutina" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">3dp</item>
+    </style>
+
+    <style name="Rutina.Etiqueta" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:textColor">@color/secundario</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:layout_marginTop">12dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
     </style>
 
     <!-- Texto de la barra superior -->

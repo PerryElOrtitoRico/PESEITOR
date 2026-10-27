@@ -6,6 +6,11 @@
 
     <include layout="@layout/barra_superior" />
 
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/pestanas"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <FrameLayout
         android:id="@+id/contenido"
         android:layout_width="match_parent"
