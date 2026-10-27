@@ -141,3 +141,12 @@ Clase `com.rutina.app.datos.Almacen`, sobre una carpeta raíz (en el celular, el
 - `planes()` → `List<PlanCelular>` ordenados por `inicio` (texto `AAAA-MM-DD`); `plan(long id)` → `PlanCelular` o `null`; `borrarPlan(long id)` borra el plan, su registro y sus cronómetros, y si era el plan activo deja `activo()` en `null`.
 - `registro(long id)` → el `RegistroCelular` guardado, o `Sesiones.registroVacio(plan)` si no hay (y `null` si tampoco hay plan); `guardarRegistro(RegistroCelular r)`.
 - Preferencias (`preferencias.json`, objeto JSON): `activo()` → `Long` (id del plan activo, `null` si no hay) y `activo(Long id)`; `oscuro()` → `boolean` (por defecto `false`) y `oscuro(boolean)`; `crono(long id, int micro, int dia)` → `EstadoCrono` (`Crono.nuevo()` si no hay) y `crono(long id, int micro, int dia, EstadoCrono e)`, guardado con la clave `"<id>-<micro>-<dia>"`.
+
+## 15. Android: textos de la pantalla de la sesión (`TextosSesion`)
+Clase `com.rutina.app.logica.TextosSesion`, solo métodos estáticos que arman los textos que muestra la pantalla (mismos textos que la app web).
+- `tituloSesion(int micro, int dia)`: `"Microciclo 1 · Día 2"` (separados por `" · "`).
+- `lineaFecha(String fecha)`: `fecha` (AAAA-MM-DD) `null` → `"Sin anotar todavía"`; si no, `"Anotada el "` + `Fechas.larga(fecha)`: `"2026-10-27"` → `"Anotada el 27/10/2026"`.
+- `repsTexto(int[] totales)`: `totales` = `{planificadas, hechas}` como lo devuelve `Totales.totalesEjercicio`. `"<hechas> / <planificadas> reps"`; si `hechas == -1`, `"— / <planificadas> reps"` (raya larga). `{11, 10}` → `"10 / 11 reps"`; `{11, -1}` → `"— / 11 reps"`.
+- `errorCasilla(String texto, List<SerieReal> planificadas)`: el mensaje de error de la casilla. `null` si el texto es `null`, está en blanco o es una notación válida; si es inválida, el mensaje de la `IllegalArgumentException` que lanza `NotacionRegistro.parse(texto, planificadas)` (por ejemplo `serie inválida: "x" (reps de 1 a 99, kg con coma)`).
+- `ojoCasilla(String texto, List<SerieReal> planificadas)`: el aviso gris. `null` si el texto es `null`, está en blanco o es inválido, o si tiene tantas series como las planificadas o menos (`"0"` da cero series); si tiene más, `"Ojo: <n> series (planificadas: <m>). Los decimales del peso van con coma."` con `n` las series escritas y `m` las planificadas.
+

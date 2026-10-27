@@ -41,3 +41,10 @@ Intento 1: 199 s, entrada 4931, salida 2035. **Devolvió el archivo entero** (en
 
 ## Total Tarea 3
 `T34z` (focos 1–4 con todo junto): 7/7. 0 correcciones de código; 2 pedidos extra de solo test (T34a, T34d) por bloques faltantes.
+
+## T35 — textos de la pantalla de la sesión (Gemma, intento 1)
+Verificada antes de mandar (5/5 con los pasos tal cual). 52 s, entrada 3128, salida 870, dos bloques (la frase "Devolvé DOS bloques" funcionó). 5/5 ocultos, 0 correcciones. `TextosSesion` deja los textos (título, fecha, reps, error y aviso de la casilla) como funciones puras y la `VistaEjercicio` de Claude solo los pone en pantalla.
+
+## Tarea 6 (Claude): lo que no se delegó y por qué
+- `VistaEjercicio`, `SesionActivity`, `Escalas`, layouts XML: vistas y cableado, hechos por Claude (regla de qwen-aprendizajes: el modelo solo recibe lógica pura).
+- Se sacó del Activity la regla "cuándo guardar" a `GuardadoSesion.hayQueGuardar` (con 5 tests de Claude) porque el Spinner dispara `onItemSelected` solo al abrir la pantalla y sin esa regla abrir una sesión creaba una sesión vacía con fecha.

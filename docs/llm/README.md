@@ -48,3 +48,4 @@ Plan: `docs/superpowers/plans/2026-10-27-app-android.md`. Contrato: secciones 10
 | T34d `Almacen.cargarDesdeTexto` | qwen | 5/5 | 0 (+1 pedido solo del test; extractor ajustado) | qwen |
 | T34b `Almacen`: preferencias | Gemma | 5/5 | 0 | Gemma |
 | T34c `Almacen`: planes, borrar, cronómetros | Gemma | 4/4 (+7/7 focos T34z) | 0 | Gemma |
+| T35 `TextosSesion` (textos de la pantalla de la sesión) | Gemma | 5/5 | 0 | Gemma (pantalla, `GuardadoSesion` y layouts: Claude) |

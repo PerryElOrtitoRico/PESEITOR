@@ -96,6 +96,11 @@
         <item name="android:layout_marginBottom">4dp</item>
     </style>
 
+    <style name="Rutina.SubtituloBarra" parent="TextAppearance.AppCompat.Small">
+        <item name="android:textColor">@color/secundario</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
     <!-- Texto de la barra superior -->
     <style name="Rutina.TituloBarra" parent="TextAppearance.AppCompat.Title">
         <item name="android:textColor">@color/texto</item>
