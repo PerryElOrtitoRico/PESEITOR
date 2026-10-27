@@ -8,4 +8,3 @@ RUTINEITOR para Windows
 
 No hace falta instalar Java: viene incluido en la carpeta "jre".
 
-App del celular: https://perryelortitorico.github.io/RUTINEITOR/

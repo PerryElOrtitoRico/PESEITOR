@@ -9,17 +9,22 @@ Programa de escritorio para programar mesociclos de sobrecarga con el **método 
 - **Macrociclo:** calendario del año con los mesociclos y los planes de pliometría, más el gráfico anual de volumen e intensidad.
 - **Mesociclo:** la grilla de días y ejercicios, con las series que se calculan solas, los contadores, el gráfico teoría vs planilla y el botón **Exportar PDF**.
 - **Perfiles:** cada persona tiene sus propios ejercicios, 1RM y mesociclos. Las plantillas son compartidas.
-- **Progreso y Registro:** lo que entrenaste de verdad (anotado en el celular) comparado con la planilla.
+- **Progreso y Registro:** lo que entrenaste de verdad (anotado en la app del celular) comparado con la planilla.
 
 ## Registro desde el celular
 
-La app del celular está en <https://perryelortitorico.github.io/RUTINEITOR/> (código en [`celular/`](celular/)). No necesita cuenta ni conexión una vez abierta.
+La app del celular es una app nativa de Android (código en [`android/`](android/)), instalada desde la PC por cable: no usa Play Store, servicios de Google ni internet. Guarda todo en el almacenamiento interno de la app (`com.rutina.app`).
 
-1. En la PC, pestaña **Mesociclo → Plan al celular**: guarda un `.json` con el plan. Pasalo al celular (WhatsApp a vos mismo, Drive, cable).
-2. En el celular, abrí el link en Chrome y, en el menú ⋮, **Agregar a pantalla principal** (queda como app).
-3. En la app: **Cargar plan** → elegí el `.json`. Después elegís microciclo y día y anotás la sesión; se guarda sola.
-4. Al terminar el mesociclo (o cuando quieras), **Exportar registro** y pasá ese `.json` a la PC.
-5. En la PC, **Mesociclo → Importar registro**. La pestaña **Registro** muestra Planilla vs Entrenado.
+1. En la PC, pestaña **Mesociclo → Plan al celular**: guarda un `.json` con el plan. Pasalo al celular (WhatsApp a vos mismo, Drive, cable a Descargas).
+2. En el celular, tocá el archivo y elegí RUTINEITOR en **Compartir** o **Abrir con**, o en la app **Planes → Cargar archivo**. Después elegís microciclo y día en **Sesión** y anotás; se guarda sola.
+3. Al terminar el mesociclo (o cuando quieras), **Exportar → Compartir registro** o **Guardar en Descargas**, y pasá ese `.json` a la PC.
+4. En la PC, **Mesociclo → Importar registro**. La pestaña **Registro** muestra Planilla vs Entrenado.
+
+Compilar e instalar la app (necesita las herramientas de línea de comandos del SDK de Android en `~/Android/Sdk`, `android/local.properties` con `sdk.dir=…` y el celular con depuración USB):
+
+```bash
+cd android && ./gradlew test installDebug
+```
 
 ## Descargar para Windows
 
