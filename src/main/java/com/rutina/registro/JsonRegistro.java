@@ -55,7 +55,7 @@ public final class JsonRegistro {
 
     /** Escribe en UTF-8. */
     public static void escribirPlan(Path destino, PlanCelular plan) throws IOException {
-        Files.writeString(destino, planAJson(plan), StandardCharsets.UTF_8);
+        Files.write(destino, planAJson(plan).getBytes(StandardCharsets.UTF_8));
     }
 
     /** @throws IllegalArgumentException si el archivo no es un registro válido (formato, versión, fechas, rangos, repetidos). */
@@ -109,7 +109,7 @@ public final class JsonRegistro {
     }
 
     public static RegistroCelular leerRegistro(Path archivo) throws IOException {
-        return registroDeJson(Files.readString(archivo, StandardCharsets.UTF_8));
+        return registroDeJson(new String(Files.readAllBytes(archivo), StandardCharsets.UTF_8));
     }
 
     /** JSON con sangría (la clave de la sensación final es "final"). */

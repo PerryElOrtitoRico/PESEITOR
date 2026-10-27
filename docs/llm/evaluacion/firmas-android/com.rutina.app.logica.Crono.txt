@@ -1,0 +1,11 @@
+Compiled from "Crono.java"
+public final class com.rutina.app.logica.Crono {
+  private com.rutina.app.logica.Crono();
+  public static com.rutina.app.logica.EstadoCrono nuevo();
+  public static com.rutina.app.logica.EstadoCrono iniciar(com.rutina.app.logica.EstadoCrono, long);
+  public static com.rutina.app.logica.EstadoCrono pausar(com.rutina.app.logica.EstadoCrono, long);
+  public static long ms(com.rutina.app.logica.EstadoCrono, long);
+  public static java.lang.String texto(long);
+  public static java.lang.Integer minutosDe(long);
+  public static java.lang.Integer duracionValida(java.lang.String);
+}

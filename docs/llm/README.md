@@ -34,3 +34,18 @@ Origen: `Mejorias.md` del vault (Obsidian), 27/10/2026. Contrato: `00-especifica
 | T22 funciones del cronómetro (7 funciones) | Gemma | 7/7 | 0 | Gemma |
 | T23 `limpiarSesion` con nota | qwen | 2/2 (+15 viejas) | 0 | qwen |
 | T24 share target en `sw.js` | qwen | 4/4 | 0 | qwen |
+
+## Android (rama `llm/android`, `tareas/T3x`)
+Plan: `docs/superpowers/plans/2026-10-27-app-android.md`. Contrato: secciones 10 a 14 de `00-especificacion.md`. Herramientas: `evaluar-android.sh <Txx>`, `verificar_tarea.py <tarea.md>` (antes de pedir), `pedir.py` con rutas `android/…`. Retrospectiva: `mejoras-qwen-android.md`.
+
+| Subtarea | Modelo | Ocultos | Correcciones | Quién |
+|---|---|---|---|---|
+| T31a `Sesiones`: búsquedas, registroVacio, pista, nombreArchivoRegistro | Gemma | 5/5 | 0 | Gemma |
+| T31b `Sesiones`: limpiarSesion, guardarSesion | qwen | 6/6 | 0 | qwen |
+| T32 `Totales` | Gemma | 3/3 | 0 | Gemma |
+| T33 `Crono` | Gemma | 5/5 | 0 | Gemma |
+| T34a `Almacen`: escritura atómica y lectura con respaldo | qwen | 5/5 | 0 (+1 pedido solo del test) | qwen |
+| T34d `Almacen.cargarDesdeTexto` | qwen | 5/5 | 0 (+1 pedido solo del test; extractor ajustado) | qwen |
+| T34b `Almacen`: preferencias | Gemma | 5/5 | 0 | Gemma |
+| T34c `Almacen`: planes, borrar, cronómetros | Gemma | 4/4 (+7/7 focos T34z) | 0 | Gemma |
+| T35 `TextosSesion` (textos de la pantalla de la sesión) | Gemma | 5/5 | 0 | Gemma (pantalla, `GuardadoSesion` y layouts: Claude) |

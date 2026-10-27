@@ -1,0 +1,6 @@
+Compiled from "Totales.java"
+public final class com.rutina.app.logica.Totales {
+  private com.rutina.app.logica.Totales();
+  public static int totalReps(java.util.List<com.rutina.registro.SerieReal>);
+  public static int[] totalesEjercicio(java.util.List<com.rutina.registro.FilaPlan>, java.util.Map<java.lang.String, java.lang.String>);
+}
