@@ -27,3 +27,4 @@ Origen: `Mejorias.md` del vault (Obsidian), 27/10/2026. Contrato: `00-especifica
 | Subtarea | Modelo | Ocultos | Correcciones | Quién |
 |---|---|---|---|---|
 | T21 totales de reps (`totalReps`, `totalesEjercicio`) | Gemma | 4/4 | 0 | Gemma |
+| T22 funciones del cronómetro (7 funciones) | Gemma | 7/7 | 0 | Gemma |

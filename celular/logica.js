@@ -149,45 +149,50 @@ const Logica = {
 
   /** Estado: { acumuladoMs, desde } (desde = epoch ms si está corriendo, null si está parado). */
   cronoNuevo() {
-    // TODO T22
-    throw new Error("T22");
+    return { acumuladoMs: 0, desde: null };
   },
 
   /** Si ya corre, devuelve una copia igual; si no, { acumuladoMs, desde: ahora }. */
   cronoIniciar(estado, ahora) {
-    // TODO T22
-    throw new Error("T22");
+    if (estado.desde !== null) return { acumuladoMs: estado.acumuladoMs, desde: estado.desde };
+    return { acumuladoMs: estado.acumuladoMs, desde: ahora };
   },
 
   /** Si corre: { acumuladoMs: acumuladoMs + (ahora - desde), desde: null }; si no, copia igual. */
   cronoPausar(estado, ahora) {
-    // TODO T22
-    throw new Error("T22");
+    if (estado.desde === null) return { acumuladoMs: estado.acumuladoMs, desde: null };
+    return { acumuladoMs: estado.acumuladoMs + (ahora - estado.desde), desde: null };
   },
 
   /** acumuladoMs + (desde === null ? 0 : ahora - desde). */
   cronoMs(estado, ahora) {
-    // TODO T22
-    throw new Error("T22");
+    return estado.acumuladoMs + (estado.desde === null ? 0 : ahora - estado.desde);
   },
 
   /** "h:mm:ss" sin redondear: 0 → "0:00:00", 75_500 → "0:01:15", 3_725_000 → "1:02:05". */
   cronoTexto(ms) {
-    // TODO T22
-    throw new Error("T22");
+    const total = Math.floor(ms / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    return h + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
   },
 
   /** 0 → null; si no, Math.max(1, Math.round(ms / 60000)): 29_999 → 1, 90_000 → 2, 4_500_000 → 75. */
   minutosDe(ms) {
-    // TODO T22
-    throw new Error("T22");
+    if (!(ms > 0)) return null;
+    return Math.max(1, Math.round(ms / 60000));
   },
 
   /** Texto que escribe el usuario en minutos → entero 1..600, o null si es inválido.
    *  Acepta espacios alrededor; solo dígitos. "75" → 75, " 5 " → 5, "0" → null, "601" → null, "7,5" → null, "" → null. */
   duracionValida(texto) {
-    // TODO T22
-    throw new Error("T22");
+    if (typeof texto !== "string") return null;
+    const t = texto.trim();
+    if (!/^[0-9]+$/.test(t)) return null;
+    const n = Number(t);
+    if (n < 1 || n > 600) return null;
+    return n;
   },
 
   /** "registro-<perfil>-<inicio>.json", con los espacios del perfil cambiados por "_". */
