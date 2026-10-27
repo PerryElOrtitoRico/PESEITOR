@@ -98,3 +98,46 @@ RUTINEITOR aparece en el menú **Compartir** de Android para recibir el **plan**
 ## 9. No-objetivos
 - No se cambia la notación, el formato del plan ni el cálculo del mesociclo.
 - No se publica nada (`git push` a `pages`/`gh-pages`): lo decide el usuario.
+
+## 10. App de Android: reglas generales
+La app nativa vive en `android/` (Gradle, Java 17, AndroidX; minSdk 26). Reemplaza a `celular/`, con la misma lógica en Java. La lógica va en `com.rutina.app.logica` (sesión, totales, cronómetro) y `com.rutina.app.datos` (archivos), **sin tocar nada de `android.*`**: se prueba con JUnit 5 en la JVM.
+- Los records del registro se comparten con la PC y se leen con `x()`: `PlanCelular(formato, version, perfil, mesocicloId, inicio, microciclos, dias, sesiones)`, `SesionPlan(microciclo, dia, ejercicios)`, `EjercicioPlan(bloque, nombre, tipo, modo, rm, filas)`, `FilaPlan(etiqueta, pctMin, pctMax, series)`, `SerieReal(reps, kg)`, `RegistroCelular(formato, version, perfil, mesocicloId, sesiones)`, `SesionRegistro(microciclo, dia, fecha, descanso, sensacionFinal, ejercicios, duracionMin)`, `EjercicioRegistro(bloque, esfuerzo, filas, nota)`. `NotacionRegistro.parse(texto, planificadas)` y `NotacionRegistro.esValida(texto, planificadas)` ya existen. No existen `getX()`.
+- Usar solo la API que hay en Android 8 (nivel 26): `java.nio.file.Files.readAllBytes/write/move/newDirectoryStream`, `java.nio.file.Paths.get`. **No** `Files.readString/writeString` ni `Path.of`.
+- Los datos que reciben y devuelven las funciones son inmutables: nunca modificar un argumento; devolver listas y mapas nuevos.
+- Es la traducción de `celular/logica.js`: las reglas son las mismas que las de las secciones 5 a 7 de este contrato.
+
+## 11. Android: sesión (`Sesiones`)
+Clase `com.rutina.app.logica.Sesiones`, solo métodos estáticos.
+- `sesionDelPlan(PlanCelular plan, int micro, int dia)`: la `SesionPlan` con ese microciclo y día, o `null`.
+- `sesionDelRegistro(RegistroCelular registro, int micro, int dia)`: la `SesionRegistro` con ese microciclo y día, o `null`.
+- `registroVacio(PlanCelular plan)`: `RegistroCelular` con `RegistroCelular.FORMATO`, `RegistroCelular.VERSION`, el perfil y el `mesocicloId` del plan, y la lista de sesiones vacía.
+- `limpiarSesion(SesionRegistro s)`: copia de la sesión sin ruido. A cada ejercicio: las filas con texto en blanco (o `null`) se sacan y el resto se recorta con `strip()`; la nota se recorta y, si queda en blanco o es `null`, queda `null`. Un ejercicio se conserva solo si tiene filas, o esfuerzo (no `null`), o nota. Se conserva el orden. El resto de la sesión (microciclo, día, fecha, descanso, sensación final, duración) no cambia.
+- `guardarSesion(RegistroCelular r, SesionRegistro s)`: `RegistroCelular` nuevo con la sesión pasada por `limpiarSesion`, que reemplaza a la de igual microciclo y día si existe; las sesiones quedan ordenadas por microciclo y después por día. Mismo formato, versión, perfil y mesocicloId. No modifica `r`.
+- `pista(List<SerieReal> series)`: las reps separadas por `.`; si alguna serie tiene kg mayor que 0, sigue `" · "` y los kg distintos (mayores que 0) en orden de aparición separados por `/`, sin decimales si son enteros (`120`, no `120.0`) y con coma decimal (`127,5`). Lista vacía → `""`. Ejemplos: `[3x120, 3x120, 3x127.5]` → `"3.3.3 · 120/127,5"`; `[12x0, 12x0]` → `"12.12"`; `[4x105, 4x105]` → `"4.4 · 105"`.
+- `nombreArchivoRegistro(PlanCelular plan)`: `"registro-" + perfil con cada espacio cambiado por "_" + "-" + inicio + ".json"`; `"Franco Pérez"` y `"2026-10-26"` → `"registro-Franco_Pérez-2026-10-26.json"`.
+
+## 12. Android: totales de repeticiones (`Totales`)
+Clase `com.rutina.app.logica.Totales`.
+- `totalReps(List<SerieReal> series)`: suma de las reps; lista vacía → 0.
+- `totalesEjercicio(List<FilaPlan> filas, Map<String, String> textos)`: devuelve `int[]{planificadas, hechas}`. `planificadas` = suma de `totalReps(fila.series())`. `hechas`: por cada fila, si el texto de su etiqueta falta o está en blanco, cuentan las reps planificadas de esa fila; si es una notación válida (`NotacionRegistro.esValida(texto, fila.series())`), cuentan las reps de `NotacionRegistro.parse(texto, fila.series())`; si algún texto es inválido, `hechas = -1`.
+Ejemplos con filas `A` (dos series de 3 reps, 80 kg) y `B` (una serie de 5 reps, 60 kg): textos vacíos → `{11, 11}`; `A = "3.2"` → `{11, 10}`; `B = "0"` → `{11, 6}`; `A = "x"` → `{11, -1}`.
+
+## 13. Android: cronómetro (`Crono`, `EstadoCrono`)
+`record EstadoCrono(long acumuladoMs, Long desde)` en `com.rutina.app.logica` (`desde` = hora del sistema en ms si corre, `null` si está parado). `Crono`, solo métodos estáticos:
+- `nuevo()` → `EstadoCrono(0, null)`.
+- `iniciar(estado, ahora)`: si ya corre devuelve un estado igual; si no, `EstadoCrono(acumuladoMs, ahora)`.
+- `pausar(estado, ahora)`: si corre, `EstadoCrono(acumuladoMs + (ahora - desde), null)`; si no, un estado igual.
+- `ms(estado, ahora)`: `acumuladoMs` más `ahora - desde` si corre. `ms(new EstadoCrono(60_000, 1_000L), 3_601_000)` = `3_660_000` (el cronómetro siguió corriendo con la app cerrada).
+- `texto(long ms)`: `"h:mm:ss"` sin redondear (segundos hacia abajo), con `Locale.ROOT`: `0` → `"0:00:00"`, `75_500` → `"0:01:15"`, `3_725_000` → `"1:02:05"`.
+- `minutosDe(long ms)` → `Integer`: `ms <= 0` → `null`; si no, `Math.max(1, Math.round(ms / 60000.0))` como entero: `29_999` → 1, `90_000` → 2, `4_500_000` → 75.
+- `duracionValida(String texto)` → `Integer`: lo que escribe el usuario en minutos. `null` → `null`; se recorta con `strip()`; tiene que ser solo dígitos; el valor tiene que estar entre 1 y 600, si no `null`. `"75"` → 75, `" 5 "` → 5, `"0"`, `"601"`, `"7,5"`, `""` → `null`.
+
+## 14. Android: almacenamiento (`Almacen`)
+Clase `com.rutina.app.datos.Almacen`, sobre una carpeta raíz (en el celular, el almacenamiento interno de la app). Disposición: `planes/<mesocicloId>.json`, `registros/<mesocicloId>.json`, `preferencias.json`. Los planes y registros se guardan con `JsonRegistro.planAJson` / `registroAJson` (el mismo formato que se importa y se exporta).
+- `Almacen(Path raiz)`.
+- **Escritura atómica**: escribir en un archivo temporal de la misma carpeta (`<nombre>.tmp`) y moverlo con `Files.move(tmp, destino, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)`. Crear la carpeta si no existe.
+- **Archivo dañado**: si un archivo de `planes/` o `registros/` no se puede leer (JSON roto o formato inválido), se lo renombra a `<nombre>.roto-<epoch ms>` en la misma carpeta y se sigue como si no existiera; nunca se cierra la app ni se pierden los demás archivos.
+- `cargarDesdeTexto(String json)` → `Object`: lee el campo `"formato"` del JSON (no el nombre del archivo, que puede no tener `.json`; el texto puede traer espacios o saltos de línea alrededor). `"rutineitor-plan"` → valida con `JsonRegistro.planDeJson`, lo guarda (reemplaza el de igual `mesocicloId`, **conservando su registro**) y devuelve el `PlanCelular`. `"rutineitor-registro"` → valida con `JsonRegistro.registroDeJson`; si no hay un plan guardado con su `mesocicloId` lanza `IllegalArgumentException("Primero cargá el plan de este registro: no hay ningún plan con el id " + mesocicloId)`; si lo hay, guarda ese registro (reemplaza el que había) y lo devuelve. Cualquier otro caso (JSON roto, otro formato) lanza `IllegalArgumentException` con un mensaje en español.
+- `planes()` → `List<PlanCelular>` ordenados por `inicio` (texto `AAAA-MM-DD`); `plan(long id)` → `PlanCelular` o `null`; `borrarPlan(long id)` borra el plan, su registro y sus cronómetros.
+- `registro(long id)` → el `RegistroCelular` guardado, o `Sesiones.registroVacio(plan)` si no hay (y `null` si tampoco hay plan); `guardarRegistro(RegistroCelular r)`.
+- Preferencias (`preferencias.json`, objeto JSON): `activo()` → `Long` (id del plan activo, `null` si no hay) y `activo(Long id)`; `oscuro()` → `boolean` (por defecto `false`) y `oscuro(boolean)`; `crono(long id, int micro, int dia)` → `EstadoCrono` (`Crono.nuevo()` si no hay) y `crono(long id, int micro, int dia, EstadoCrono e)`, guardado con la clave `"<id>-<micro>-<dia>"`.

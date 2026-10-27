@@ -1,0 +1,11 @@
+Compiled from "EstadoCrono.java"
+public final class com.rutina.app.logica.EstadoCrono extends java.lang.Record {
+  private final long acumuladoMs;
+  private final java.lang.Long desde;
+  public com.rutina.app.logica.EstadoCrono(long, java.lang.Long);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public long acumuladoMs();
+  public java.lang.Long desde();
+}

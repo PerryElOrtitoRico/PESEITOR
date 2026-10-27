@@ -58,6 +58,16 @@ SYSTEM_METODOS = SYSTEM.split("- Devolvé cada archivo completo")[0] + """- Devo
 - Sin explicaciones fuera de los bloques."""
 
 
+def a_android(sistema):
+    """Mismo prompt, pero para los archivos de android/ (paquete com.rutina.app, Java 17, API 26)."""
+    sistema = sistema.replace("Sos un programador Java 21 cuidadoso.",
+                              "Sos un programador Java 17 cuidadoso (la app corre en Android 8 o más: nada de Files.readString/writeString ni Path.of).")
+    sistema = sistema.replace("// src/main/java/com/rutina/registro/Ejemplo.java\npackage com.rutina.registro;",
+                              "// android/app/src/main/java/com/rutina/app/logica/Ejemplo.java\npackage com.rutina.app.logica;")
+    sistema = sistema.replace("// src/main/java/com/rutina/registro/Ejemplo.java", "// android/app/src/main/java/com/rutina/app/logica/Ejemplo.java")
+    return sistema
+
+
 def leer_cabecera(texto):
     m = re.match(r"<!--\s*contrato:\s*([\d,\s]*)\|\s*archivos:\s*(.*?)\s*-->\s*\n", texto)
     if not m:
@@ -85,7 +95,7 @@ def marcar_todos(codigo, tarea_id):
     return re.sub(r"// TODO (T\w+)", cambiar, codigo)
 
 
-RUTA_LINEA = r"(?m)^\s*(?://|<!--)\s*((?:src|celular)/\S+\.(?:java|js|html|webmanifest))\s*(?:-->)?\s*$"
+RUTA_LINEA = r"(?m)^\s*(?://|<!--)\s*((?:src|celular|android)/\S+\.(?:java|js|html|webmanifest))\s*(?:-->)?\s*$"
 
 
 def extraer_bloques(respuesta):
@@ -254,6 +264,8 @@ def main():
                  f"cada uno en su bloque: {', '.join(archivos)}.")
 
     sistema = SYSTEM_JS if not archivos[0].endswith(".java") else (SYSTEM_METODOS if a.metodos else SYSTEM)
+    if archivos[0].startswith("android/"):
+        sistema = a_android(sistema)
     estimado = int((len(sistema) + len(user)) / 3.4)
     max_tokens = a.max or max(1000, CONTEXTO - estimado - 64)
     etiqueta = f"{tarea_id}-{a.modelo}-intento-{a.intento}"

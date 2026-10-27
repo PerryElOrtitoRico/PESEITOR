@@ -1,0 +1,12 @@
+Compiled from "Sesiones.java"
+public final class com.rutina.app.logica.Sesiones {
+  private com.rutina.app.logica.Sesiones();
+  public static com.rutina.registro.SesionPlan sesionDelPlan(com.rutina.registro.PlanCelular, int, int);
+  public static com.rutina.registro.SesionRegistro sesionDelRegistro(com.rutina.registro.RegistroCelular, int, int);
+  public static com.rutina.registro.RegistroCelular registroVacio(com.rutina.registro.PlanCelular);
+  public static com.rutina.registro.SesionRegistro limpiarSesion(com.rutina.registro.SesionRegistro);
+  public static com.rutina.registro.RegistroCelular guardarSesion(com.rutina.registro.RegistroCelular, com.rutina.registro.SesionRegistro);
+  public static java.lang.String pista(java.util.List<com.rutina.registro.SerieReal>);
+  private static java.lang.String textoKg(double);
+  public static java.lang.String nombreArchivoRegistro(com.rutina.registro.PlanCelular);
+}
