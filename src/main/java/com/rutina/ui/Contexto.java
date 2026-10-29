@@ -3,7 +3,9 @@ package com.rutina.ui;
 import com.rutina.model.Ejercicio;
 import com.rutina.model.Metodologia;
 import com.rutina.model.Perfil;
+import com.rutina.panel.ConexionPanel;
 import com.rutina.panel.PanelCompartido;
+import com.rutina.panel.RmAPanel;
 import com.rutina.service.datos.Database;
 import com.rutina.service.datos.EjercicioRepo;
 import com.rutina.service.datos.MesocicloRepo;
@@ -47,6 +49,20 @@ public final class Contexto {
         this.metodologia = metodologiaRepo.cargar();
         List<Perfil> perfiles = new PerfilRepo(db).listar();
         this.esPerfilDelPanel = !perfiles.isEmpty() && perfiles.get(0).id() == perfil.id();
+        if (esPerfilDelPanel) ejercicios.alRegistrarRm(this::mandarRm);
+    }
+
+    /** Cada 1RM nuevo del perfil del panel se manda; un fallo acá nunca debe afectar al guardado. */
+    private void mandarRm(EjercicioRepo.RmRegistrado rm) {
+        try {
+            if (!esPerfilDelPanel || rm.perfilId() != perfil.id()) return;
+            ConexionPanel conexion = panel.get();
+            if (conexion == null || !conexion.activo()) return;
+            if (!RmAPanel.esRepresentante(rm.ejercicioId(), rm.nombre(), ejercicios.listar(perfil.id()))) return;
+            RmAPanel.aRegistro(rm, conexion.dispositivo(), System.currentTimeMillis()).ifPresent(conexion::publicar);
+        } catch (RuntimeException | SQLException ignorada) {
+            // el panel es opcional
+        }
     }
 
     PanelCompartido panel() {
