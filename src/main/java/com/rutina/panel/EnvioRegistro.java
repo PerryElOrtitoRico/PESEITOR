@@ -3,6 +3,9 @@ package com.rutina.panel;
 import com.rutina.registro.PlanCelular;
 import com.rutina.registro.RegistroCelular;
 import com.rutina.registro.SesionRegistro;
+import panel.core.Registro;
+
+import java.util.function.Consumer;
 
 /** Manda al panel las sesiones de un registro importado. Nunca lanza ni espera a la red. */
 public final class EnvioRegistro {
@@ -10,21 +13,32 @@ public final class EnvioRegistro {
     private EnvioRegistro() {
     }
 
-    public record Resumen(boolean panelActivo, int enviadas, int sinDuracion, int fueraDelPlan, int otras) {
+    public record Resumen(boolean panelActivo, int enviadas, int sinDuracion, int fueraDelPlan, int otras,
+                          int noEncoladas) {
     }
 
     public static Resumen enviar(ConexionPanel panel, long perfilId, boolean esPerfilDelPanel, PlanCelular plan,
                                  RegistroCelular registro, int macro, int meso, long ahoraMs) {
-        if (!esPerfilDelPanel || panel == null || !panel.activo()) return new Resumen(false, 0, 0, 0, 0);
-        int enviadas = 0, sinDuracion = 0, fueraDelPlan = 0, otras = 0;
+        if (!esPerfilDelPanel || panel == null || !panel.activo()) return new Resumen(false, 0, 0, 0, 0, 0);
+        return enviar(panel::publicar, panel.dispositivo(), perfilId, plan, registro, macro, meso, ahoraMs);
+    }
+
+    /** Parte común de {@code enviar}: separada para poder probar el caso en que {@code publicar} falla. */
+    static Resumen enviar(Consumer<Registro> publicador, String dispositivo, long perfilId, PlanCelular plan,
+                          RegistroCelular registro, int macro, int meso, long ahoraMs) {
+        int enviadas = 0, sinDuracion = 0, fueraDelPlan = 0, otras = 0, noEncoladas = 0;
         if (registro != null && registro.sesiones() != null) {
             for (SesionRegistro sesion : registro.sesiones()) {
                 try {
-                    var datos = new SesionAPanel.Datos(perfilId, registro.mesocicloId(), macro, meso, panel.dispositivo());
+                    var datos = new SesionAPanel.Datos(perfilId, registro.mesocicloId(), macro, meso, dispositivo);
                     var res = SesionAPanel.convertir(datos, plan, sesion, ahoraMs);
                     if (res.registro() != null) {
-                        panel.publicar(res.registro());
-                        enviadas++;
+                        try {
+                            publicador.accept(res.registro());
+                            enviadas++;
+                        } catch (RuntimeException e) {
+                            noEncoladas++;
+                        }
                     } else if ("sin duración".equals(res.omitida()) || "duración fuera de rango".equals(res.omitida())) {
                         sinDuracion++;
                     } else if ("fuera del plan".equals(res.omitida())) {
@@ -37,7 +51,7 @@ public final class EnvioRegistro {
                 }
             }
         }
-        return new Resumen(true, enviadas, sinDuracion, fueraDelPlan, otras);
+        return new Resumen(true, enviadas, sinDuracion, fueraDelPlan, otras, noEncoladas);
     }
 
     /** Texto para el aviso al usuario; null si el panel no está activo. */
@@ -55,6 +69,10 @@ public final class EnvioRegistro {
         if (r.otras() > 0) {
             sb.append(' ').append(r.otras()).append(r.otras() == 1 ? " no se pudo" : " no se pudieron")
                     .append(" convertir.");
+        }
+        if (r.noEncoladas() > 0) {
+            sb.append(' ').append(r.noEncoladas()).append(r.noEncoladas() == 1 ? " no se pudo" : " no se pudieron")
+                    .append(" encolar.");
         }
         return sb.append(" Si el panel no responde, quedan en cola y se mandan cuando vuelva la conexión.").toString();
     }

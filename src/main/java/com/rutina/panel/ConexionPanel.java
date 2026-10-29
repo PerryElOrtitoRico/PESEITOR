@@ -36,17 +36,54 @@ public final class ConexionPanel implements AutoCloseable {
         this.sincronizador = sincronizador;
     }
 
-    /** Abre la conexión con la configuración de la carpeta de datos. Nunca lanza: un archivo ilegible es inactivo. */
+    /** Abre la conexión con la configuración de la carpeta de datos. Nunca lanza: ante cualquier fallo queda inactiva. */
     public static ConexionPanel abrir(Path carpetaDatos) {
-        ConfigPanel cfg = ConfigPanel.cargar(carpetaDatos.resolve(ARCHIVO_CONFIG));
-        if (!cfg.activo()) {
-            return new ConexionPanel(cfg, null, null);
+        try {
+            ConfigPanel cfg = ConfigPanel.cargar(carpetaDatos.resolve(ARCHIVO_CONFIG));
+            if (!cfg.activo()) {
+                return new ConexionPanel(cfg, null, null);
+            }
+            ColaLocal cola = new ColaLocal(carpetaDatos.resolve(ARCHIVO_COLA));
+            PanelClient cliente = new PanelClient(cfg, PanelClient.httpPorDefecto());
+            Sincronizador sincronizador = new Sincronizador(cfg, cola, cliente);
+            sincronizador.iniciar();
+            return new ConexionPanel(cfg, cliente, sincronizador);
+        } catch (RuntimeException e) {
+            return new ConexionPanel(inactiva(), null, null);
         }
-        ColaLocal cola = new ColaLocal(carpetaDatos.resolve(ARCHIVO_COLA));
-        PanelClient cliente = new PanelClient(cfg, PanelClient.httpPorDefecto());
-        Sincronizador sincronizador = new Sincronizador(cfg, cola, cliente);
-        sincronizador.iniciar();
-        return new ConexionPanel(cfg, cliente, sincronizador);
+    }
+
+    /** Configuración inactiva: se carga un "archivo" que es una carpeta, que nunca se puede leer. */
+    private static ConfigPanel inactiva() {
+        return ConfigPanel.cargar(Path.of(System.getProperty("user.dir", ".")));
+    }
+
+    /**
+     * Prueba los valores escritos en la ventana sin guardarlos: los pasa por una carpeta temporal que se borra
+     * siempre. Hace red de forma síncrona (no llamar desde el hilo de Swing). Nunca lanza: ante un fallo, SIN_RESPUESTA.
+     */
+    public static PanelClient.Conexion probarValores(String url, String token) {
+        Path carpeta = null;
+        try {
+            carpeta = Files.createTempDirectory("rutineitor-panel-prueba");
+            guardarConfig(carpeta, url, token, "prueba", true);
+            ConfigPanel cfg = ConfigPanel.cargar(carpeta.resolve(ARCHIVO_CONFIG));
+            return new PanelClient(cfg, PanelClient.httpPorDefecto()).probar();
+        } catch (IOException | RuntimeException e) {
+            return PanelClient.Conexion.SIN_RESPUESTA;
+        } finally {
+            borrar(carpeta);
+        }
+    }
+
+    private static void borrar(Path carpeta) {
+        if (carpeta == null) return;
+        try {
+            Files.deleteIfExists(carpeta.resolve(ARCHIVO_CONFIG));
+            Files.deleteIfExists(carpeta);
+        } catch (IOException | RuntimeException ignorada) {
+            // era una carpeta temporal
+        }
     }
 
     /** Escribe la configuración (UTF-8; permisos 600 si el sistema de archivos es POSIX). */
