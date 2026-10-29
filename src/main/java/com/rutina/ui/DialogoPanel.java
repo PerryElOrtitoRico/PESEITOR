@@ -3,6 +3,8 @@ package com.rutina.ui;
 import com.rutina.panel.ClavesPanel;
 import com.rutina.panel.ConexionPanel;
 import com.rutina.panel.HistorialRm;
+import com.rutina.panel.NombreDispositivo;
+import com.rutina.panel.TextosPanel;
 import com.rutina.panel.ValidacionConexion;
 import com.rutina.service.datos.Database;
 import panel.core.ConfigPanel;
@@ -27,7 +29,6 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.net.InetAddress;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -144,12 +145,7 @@ final class DialogoPanel extends JDialog {
     }
 
     private static String nombreDeEstaPc() {
-        try {
-            String nombre = InetAddress.getLocalHost().getHostName();
-            return nombre == null || nombre.isBlank() ? "pc" : nombre;
-        } catch (Exception e) {
-            return "pc";
-        }
+        return NombreDispositivo.porDefecto(System.getenv());
     }
 
     private String clavesDelPerfil() {
@@ -227,11 +223,14 @@ final class DialogoPanel extends JDialog {
         if (conexion == null || !conexion.activo()) return;
         ocupado(true, "Enviando…");
         new SwingWorker<HistorialRm.Envio, Void>() {
+            private volatile int pendientes;
+
             @Override
             protected HistorialRm.Envio doInBackground() throws Exception {
                 HistorialRm.Envio envio = HistorialRm.enviarTodo(conexion, ctx.ejercicios, ctx.perfil.id(),
                         conexion.dispositivo(), System.currentTimeMillis());
                 conexion.vaciarAhora();
+                pendientes = conexion.pendientes();
                 return envio;
             }
 
@@ -240,16 +239,14 @@ final class DialogoPanel extends JDialog {
                 ocupado(false, " ");
                 try {
                     HistorialRm.Envio envio = get();
-                    StringBuilder sb = new StringBuilder("Se mandaron ").append(envio.enviados())
-                            .append(" valores de 1RM.");
-                    for (String a : envio.advertencias()) sb.append('\n').append(a);
-                    JOptionPane.showMessageDialog(DialogoPanel.this, sb.toString(), "Historial de 1RM",
+                    String texto = TextosPanel.historialEnviado(envio.enviados(), pendientes, envio.advertencias());
+                    JOptionPane.showMessageDialog(DialogoPanel.this, texto, "Historial de 1RM",
                             JOptionPane.INFORMATION_MESSAGE);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } catch (ExecutionException e) {
-                    String causa = e.getCause() == null ? "" : e.getCause().getMessage();
-                    JOptionPane.showMessageDialog(DialogoPanel.this, "No se pudo leer el historial: " + causa,
+                    JOptionPane.showMessageDialog(DialogoPanel.this,
+                            "No se pudo leer el historial: " + TextosPanel.causa(e.getCause()),
                             "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
@@ -258,14 +255,34 @@ final class DialogoPanel extends JDialog {
 
     private void guardarConfiguracion() {
         if (!validar()) return;
-        try {
-            ConexionPanel.guardarConfig(carpetaDatos, urlEscrita(), tokenEscrito(), dispositivoEscrito(),
-                    enviar.isSelected());
-            ctx.panel().reemplazar(ConexionPanel.abrir(carpetaDatos));
-            dispose();
-        } catch (java.io.IOException e) {
-            JOptionPane.showMessageDialog(this, "No se pudo guardar la configuración: " + e.getMessage(), "Error",
-                    JOptionPane.ERROR_MESSAGE);
-        }
+        String u = urlEscrita();
+        String t = tokenEscrito();
+        String d = dispositivoEscrito();
+        boolean enviarAlPanel = enviar.isSelected();
+        ocupado(true, "Guardando…");
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                ConexionPanel.guardarConfig(carpetaDatos, u, t, d, enviarAlPanel);
+                ctx.panel().reabrir(() -> ConexionPanel.abrir(carpetaDatos));
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    get();
+                    dispose();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    ocupado(false, " ");
+                } catch (ExecutionException e) {
+                    ocupado(false, " ");
+                    JOptionPane.showMessageDialog(DialogoPanel.this,
+                            "No se pudo guardar la configuración: " + TextosPanel.causa(e.getCause()), "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
     }
 }

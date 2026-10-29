@@ -28,4 +28,52 @@ class PanelCompartidoTest {
         p.close();
         p.close(); // idempotente
     }
+
+    @Test
+    void reabrirCierraLaViejaAntesDeAbrirLaNueva() {
+        ConexionPanel vieja = ConexionPanel.abrir(null);
+        ConexionPanel nueva = ConexionPanel.abrir(null);
+        java.util.List<String> eventos = new java.util.ArrayList<>();
+        PanelCompartido p = new PanelCompartido(vieja);
+        p.reabrir(() -> {
+            eventos.add("abrir");
+            assertNotNull(p.get());
+            assertNotSame(vieja, p.get());
+            return nueva;
+        }, c -> {
+            assertSame(vieja, c);
+            eventos.add("cerrar");
+        });
+        assertEquals(java.util.List.of("cerrar", "abrir"), eventos);
+        assertSame(nueva, p.get());
+    }
+
+    @Test
+    void reabrirConSupplierQueFallaDejaUnaConexionInactiva() {
+        PanelCompartido p = new PanelCompartido(ConexionPanel.abrir(null));
+        p.reabrir(() -> {
+            throw new IllegalStateException("falla");
+        });
+        assertNotNull(p.get());
+        assertFalse(p.get().activo());
+    }
+
+    @Test
+    void getNuncaDevuelveNullDuranteElCambio() throws Exception {
+        PanelCompartido p = new PanelCompartido(ConexionPanel.abrir(null));
+        java.util.concurrent.atomic.AtomicBoolean seguir = new java.util.concurrent.atomic.AtomicBoolean(true);
+        java.util.concurrent.atomic.AtomicInteger nulos = new java.util.concurrent.atomic.AtomicInteger();
+        Thread lector = new Thread(() -> {
+            while (seguir.get()) {
+                if (p.get() == null) nulos.incrementAndGet();
+            }
+        });
+        lector.start();
+        for (int i = 0; i < 200; i++) {
+            p.reabrir(() -> ConexionPanel.abrir(null));
+        }
+        seguir.set(false);
+        lector.join(2000);
+        assertEquals(0, nulos.get());
+    }
 }

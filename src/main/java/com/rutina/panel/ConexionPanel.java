@@ -28,10 +28,12 @@ public final class ConexionPanel implements AutoCloseable {
 
     private final ConfigPanel cfg;
     private final PanelClient cliente;
+    private final ColaLocal cola;
     private final Sincronizador sincronizador;
 
-    private ConexionPanel(ConfigPanel cfg, PanelClient cliente, Sincronizador sincronizador) {
+    private ConexionPanel(ConfigPanel cfg, PanelClient cliente, Sincronizador sincronizador, ColaLocal cola) {
         this.cfg = cfg;
+        this.cola = cola;
         this.cliente = cliente;
         this.sincronizador = sincronizador;
     }
@@ -41,15 +43,15 @@ public final class ConexionPanel implements AutoCloseable {
         try {
             ConfigPanel cfg = ConfigPanel.cargar(carpetaDatos.resolve(ARCHIVO_CONFIG));
             if (!cfg.activo()) {
-                return new ConexionPanel(cfg, null, null);
+                return new ConexionPanel(cfg, null, null, null);
             }
             ColaLocal cola = new ColaLocal(carpetaDatos.resolve(ARCHIVO_COLA));
             PanelClient cliente = new PanelClient(cfg, PanelClient.httpPorDefecto());
             Sincronizador sincronizador = new Sincronizador(cfg, cola, cliente);
             sincronizador.iniciar();
-            return new ConexionPanel(cfg, cliente, sincronizador);
+            return new ConexionPanel(cfg, cliente, sincronizador, cola);
         } catch (RuntimeException e) {
-            return new ConexionPanel(inactiva(), null, null);
+            return new ConexionPanel(inactiva(), null, null, null);
         }
     }
 
@@ -138,6 +140,11 @@ public final class ConexionPanel implements AutoCloseable {
     /** Prueba la conexión (red síncrona, no llamar desde el hilo de Swing). Inactiva: SIN_RESPUESTA sin red. */
     public PanelClient.Conexion probar() {
         return cliente == null ? PanelClient.Conexion.SIN_RESPUESTA : cliente.probar();
+    }
+
+    /** Cuántos registros siguen en la cola sin entregar (lee el archivo; no llamar desde el hilo de Swing). */
+    public int pendientes() {
+        return cola == null ? 0 : cola.pendientes().size();
     }
 
     public String url() {
