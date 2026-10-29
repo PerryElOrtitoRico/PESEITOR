@@ -29,7 +29,8 @@ public final class FormatoSeries {
         return String.join(" · ", grupos);
     }
 
-    private static String kg(double kg) {
+    /** Kilos como texto: enteros sin decimales, si no con coma decimal. */
+    static String kg(double kg) {
         return BigDecimal.valueOf(kg).stripTrailingZeros().toPlainString().replace('.', ',');
     }
 }
