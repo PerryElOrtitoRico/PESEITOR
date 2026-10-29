@@ -8,3 +8,5 @@ RUTINEITOR para Windows
 
 No hace falta instalar Java: viene incluido en la carpeta "jre".
 
+Opcional: el menu "Panel -> Conexion con el panel..." conecta RUTINEITOR con el Panel personal.
+Si no lo configuras no se usa y el programa funciona igual que siempre.
