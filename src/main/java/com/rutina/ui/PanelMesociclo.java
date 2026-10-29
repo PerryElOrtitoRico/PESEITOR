@@ -1,5 +1,8 @@
 package com.rutina.ui;
 
+import com.rutina.panel.ConexionPanel;
+import com.rutina.panel.EnvioRegistro;
+import com.rutina.panel.NumeracionMeso;
 import com.rutina.model.Aproximacion;
 import com.rutina.model.Bloque;
 import com.rutina.model.Ejercicio;
@@ -678,8 +681,29 @@ final class PanelMesociclo extends JPanel {
             ctx.registros.guardar(r);
             // se redibuja después, como en guardar(): no se destruyen componentes en medio de su evento
             SwingUtilities.invokeLater(this::recalcular);
+            enviarAlPanel(r);
         } catch (Exception e) {
             Contexto.error(this, e);
+        }
+    }
+
+    /** Manda las sesiones importadas al panel. El registro ya está guardado: cualquier fallo se ignora. */
+    private void enviarAlPanel(RegistroCelular r) {
+        try {
+            ConexionPanel conexion = ctx.panel().get();
+            if (!ctx.esPerfilDelPanel() || conexion == null || !conexion.activo()) return;
+            if (resultado == null) {
+                JOptionPane.showMessageDialog(this, "No se pudo armar el plan: no se mandó nada al panel.");
+                return;
+            }
+            var plan = ArmadorPlan.armar(ctx.perfil.nombre(), actual, resultado, ctx.metodologia());
+            int[] numeracion = NumeracionMeso.de(ctx.mesociclos.listar(ctx.perfil.id()), actual);
+            var resumen = EnvioRegistro.enviar(conexion, ctx.perfil.id(), true, plan, r,
+                    numeracion[0], numeracion[1], System.currentTimeMillis());
+            String mensaje = EnvioRegistro.mensaje(resumen);
+            if (mensaje != null) JOptionPane.showMessageDialog(this, mensaje);
+        } catch (Exception ignorada) {
+            // la importación ya salió bien
         }
     }
 

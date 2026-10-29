@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /** Ejercicios de un perfil y el historial de sus 1RM. */
 public final class EjercicioRepo {
@@ -23,7 +24,12 @@ public final class EjercicioRepo {
     private static final Type REPS = new TypeToken<Map<Zona, Integer>>() {
     }.getType();
 
+    /** Un 1RM que acaba de quedar en el historial. */
+    public record RmRegistrado(long ejercicioId, long perfilId, String nombre, LocalDate fecha, double rm) {
+    }
+
     private final Database db;
+    private Consumer<RmRegistrado> oyenteRm;
 
     public EjercicioRepo(Database db) {
         this.db = db;
@@ -48,6 +54,11 @@ public final class EjercicioRepo {
         return res;
     }
 
+    /** Avisa cada vez que se agrega un 1RM al historial (un solo oyente; null lo quita). */
+    public void alRegistrarRm(Consumer<RmRegistrado> oyente) {
+        this.oyenteRm = oyente;
+    }
+
     /** Inserta si {@code id == 0}; si el 1RM cambió, lo agrega al historial con fecha de hoy. */
     public Ejercicio guardar(Ejercicio e) throws SQLException {
         if (e.id() == 0) {
@@ -63,7 +74,7 @@ public final class EjercicioRepo {
                     id = rs.getLong(1);
                 }
             }
-            if (e.rm() != null) agregarHistorial(id, e.rm(), LocalDate.now());
+            if (e.rm() != null) agregarHistorial(id, e.perfilId(), e.nombre(), e.rm(), LocalDate.now());
             return new Ejercicio(id, e.perfilId(), e.nombre(), e.tipo(), e.rm(), e.rmObjetivo(), e.techoPct(),
                     e.repsPorSerie(), e.grupoPlio(), e.orden(), e.activo());
         }
@@ -75,7 +86,7 @@ public final class EjercicioRepo {
             ps.setLong(10, e.id());
             ps.executeUpdate();
         }
-        if (e.rm() != null && !e.rm().equals(anterior)) agregarHistorial(e.id(), e.rm(), LocalDate.now());
+        if (e.rm() != null && !e.rm().equals(anterior)) agregarHistorial(e.id(), e.perfilId(), e.nombre(), e.rm(), LocalDate.now());
         return e;
     }
 
@@ -85,7 +96,14 @@ public final class EjercicioRepo {
             ps.setLong(2, id);
             ps.executeUpdate();
         }
-        agregarHistorial(id, rm, fecha);
+        try (PreparedStatement ps = db.conexion().prepareStatement(
+                "SELECT perfil_id, nombre FROM ejercicio WHERE id = ?")) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) agregarHistorial(id, rs.getLong(1), rs.getString(2), rm, fecha);
+                else agregarHistorial(id, rm, fecha);
+            }
+        }
     }
 
     public List<PuntoRm> historial(long id) throws SQLException {
@@ -98,6 +116,18 @@ public final class EjercicioRepo {
             }
         }
         return res;
+    }
+
+    /** Agrega al historial y avisa al oyente; lo que haga el oyente nunca afecta al guardado. */
+    private void agregarHistorial(long id, long perfilId, String nombre, double rm, LocalDate fecha) throws SQLException {
+        agregarHistorial(id, rm, fecha);
+        Consumer<RmRegistrado> oyente = oyenteRm;
+        if (oyente == null) return;
+        try {
+            oyente.accept(new RmRegistrado(id, perfilId, nombre, fecha, rm));
+        } catch (RuntimeException ignorada) {
+            // el cambio ya está en la base
+        }
     }
 
     private void agregarHistorial(long id, double rm, LocalDate fecha) throws SQLException {

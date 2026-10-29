@@ -2,6 +2,8 @@ package com.rutina.ui;
 
 import com.rutina.model.Mesociclo;
 import com.rutina.model.Perfil;
+import com.rutina.panel.ConexionPanel;
+import com.rutina.panel.PanelCompartido;
 import com.rutina.service.datos.Database;
 import com.rutina.service.datos.PerfilRepo;
 
@@ -39,6 +41,11 @@ public final class VentanaPrincipal extends JFrame {
         cambiar.addActionListener(e -> cambiarPerfil(ctx));
         menu.add(cambiar);
         barra.add(menu);
+        JMenu menuPanel = new JMenu("Panel");
+        JMenuItem conexion = new JMenuItem("Conexión con el panel…");
+        conexion.addActionListener(e -> DialogoPanel.mostrar(this, ctx));
+        menuPanel.add(conexion);
+        barra.add(menuPanel);
         setJMenuBar(barra);
 
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -46,6 +53,11 @@ public final class VentanaPrincipal extends JFrame {
             @Override
             public void windowClosed(WindowEvent e) {
                 if (!cerrarBaseAlSalir) return;
+                try {
+                    ctx.panel().close(); // primero: así el hilo de envío no sobrevive a un fallo al cerrar la base
+                } catch (Exception ignored) {
+                    // se está cerrando el programa
+                }
                 try {
                     ctx.db.close();
                 } catch (Exception ignored) {
@@ -66,7 +78,7 @@ public final class VentanaPrincipal extends JFrame {
         try {
             Perfil p = SelectorPerfil.elegir(new PerfilRepo(ctx.db), true);
             if (p == null || p.id() == ctx.perfil.id()) return;
-            new VentanaPrincipal(new Contexto(ctx.db, p)).setVisible(true);
+            new VentanaPrincipal(new Contexto(ctx.db, p, ctx.panel())).setVisible(true);
             cerrarBaseAlSalir = false; // la base sigue abierta: la usa la ventana nueva
             dispose();
         } catch (Exception e) {
@@ -98,7 +110,13 @@ public final class VentanaPrincipal extends JFrame {
                 db.close();
                 return;
             }
-            new VentanaPrincipal(new Contexto(db, p)).setVisible(true);
+            PanelCompartido panel = new PanelCompartido(ConexionPanel.abrir(Database.rutaPorDefecto().getParent()));
+            try {
+                new VentanaPrincipal(new Contexto(db, p, panel)).setVisible(true);
+            } catch (Exception e) {
+                panel.close();
+                throw e;
+            }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "No se pudo abrir la base de datos en " + Database.rutaPorDefecto()
                     + ":\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
