@@ -49,7 +49,7 @@ Menú **Panel → Conexión con el panel…** y completá:
 
 Los botones son **Probar conexión**, **Enviar historial de 1RM**, **Guardar** y **Cancelar**.
 
-**Probar conexión** verifica la URL y el token sin guardar. El botón **Enviar historial de 1RM** manda de una vez los 1RM que ya tenías guardados.
+**Probar conexión** verifica la dirección y el token sin guardar. El botón **Enviar historial de 1RM** manda de una vez los 1RM que ya tenías guardados.
 
 La ventana también lista las **claves de 1RM** de tus ejercicios: son las que se escriben en el campo "métrica" al crear una meta en el panel. La clave sale del nombre del ejercicio: minúsculas, sin tildes, y todo lo que no sea letra o número pasa a un guion (sin guiones en los extremos). Ejemplos: `Press banca` → `1rm:press-banca`, `Sentadilla frontal (barra)` → `1rm:sentadilla-frontal-barra`. Si dos ejercicios dan la misma clave, solo se manda el de menor id. Si renombrás un ejercicio, su clave cambia (`1rm:` más la clave nueva): los puntos ya enviados quedan con la clave vieja y una meta creada con esa clave deja de moverse. Usá **Enviar historial de 1RM** para reenviar todo el historial con la clave nueva y creá la meta de nuevo con ella.
 
