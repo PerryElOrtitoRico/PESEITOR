@@ -91,7 +91,7 @@ class EnvioRegistroTest {
     void enviaLasSesionesConvertibles() throws Exception {
         try (ConexionPanel c = conexionActiva()) {
             var r = EnvioRegistro.enviar(c, 7, true, plan(1, 2), reg(ses(1, 60), ses(2, 45)), 2026, 2, AHORA);
-            assertEquals(new EnvioRegistro.Resumen(true, 2, 0, 0, 0), r);
+            assertEquals(new EnvioRegistro.Resumen(true, 2, 0, 0, 0, 0), r);
             esperar(() -> cuerpos.size() >= 2);
         }
         assertEquals(2, cuerpos.size());
@@ -104,7 +104,7 @@ class EnvioRegistroTest {
         try (ConexionPanel c = conexionActiva()) {
             var r = EnvioRegistro.enviar(c, 7, true, plan(1, 2, 3),
                     reg(ses(1, 60), ses(2, null), ses(3, 700), ses(4, 30)), 2026, 2, AHORA);
-            assertEquals(new EnvioRegistro.Resumen(true, 1, 2, 1, 0), r);
+            assertEquals(new EnvioRegistro.Resumen(true, 1, 2, 1, 0, 0), r);
         }
     }
 
@@ -113,7 +113,7 @@ class EnvioRegistroTest {
         try (ConexionPanel c = conexionActiva()) {
             var mala = new SesionRegistro(1, 1, "no-es-fecha", 3, 3, List.of(), 60);
             var r = EnvioRegistro.enviar(c, 7, true, plan(1), reg(mala), 2026, 2, AHORA);
-            assertEquals(new EnvioRegistro.Resumen(true, 0, 0, 0, 1), r);
+            assertEquals(new EnvioRegistro.Resumen(true, 0, 0, 0, 1, 0), r);
         }
     }
 
@@ -152,7 +152,7 @@ class EnvioRegistroTest {
     void panelInactivoNoPublicaNada() throws Exception {
         try (ConexionPanel c = ConexionPanel.abrir(carpeta)) {
             var r = EnvioRegistro.enviar(c, 7, true, plan(1), reg(ses(1, 60)), 2026, 2, AHORA);
-            assertEquals(new EnvioRegistro.Resumen(false, 0, 0, 0, 0), r);
+            assertEquals(new EnvioRegistro.Resumen(false, 0, 0, 0, 0, 0), r);
         }
         assertFalse(Files.exists(carpeta.resolve("panel-cola.jsonl")));
         assertTrue(cuerpos.isEmpty());
@@ -162,7 +162,7 @@ class EnvioRegistroTest {
     void otroPerfilNoPublicaNada() throws Exception {
         try (ConexionPanel c = conexionActiva()) {
             var r = EnvioRegistro.enviar(c, 8, false, plan(1), reg(ses(1, 60)), 2026, 2, AHORA);
-            assertEquals(new EnvioRegistro.Resumen(false, 0, 0, 0, 0), r);
+            assertEquals(new EnvioRegistro.Resumen(false, 0, 0, 0, 0, 0), r);
             c.vaciarAhora();
         }
         assertFalse(Files.exists(carpeta.resolve("panel-cola.jsonl")));
@@ -176,7 +176,7 @@ class EnvioRegistroTest {
         servidor.stop(0);
         try (ConexionPanel c = ConexionPanel.abrir(carpeta)) {
             var r = EnvioRegistro.enviar(c, 7, true, plan(1, 2), reg(ses(1, 60), ses(2, 45)), 2026, 2, AHORA);
-            assertEquals(new EnvioRegistro.Resumen(true, 2, 0, 0, 0), r);
+            assertEquals(new EnvioRegistro.Resumen(true, 2, 0, 0, 0, 0), r);
             c.vaciarAhora();
         }
         assertEquals(List.of("ses:7:12:1:1", "ses:7:12:1:2"),
@@ -189,7 +189,7 @@ class EnvioRegistroTest {
             var rara = new SesionRegistro(1, 1, "2026-05-01", 3, 3, List.of(
                     new EjercicioRegistro("1-1", null, Map.of("80", "  me dolió el codo "), null)), 60);
             var r = EnvioRegistro.enviar(c, 7, true, plan(1, 2), reg(rara, ses(2, 45)), 2026, 2, AHORA);
-            assertEquals(new EnvioRegistro.Resumen(true, 2, 0, 0, 0), r);
+            assertEquals(new EnvioRegistro.Resumen(true, 2, 0, 0, 0, 0), r);
         }
     }
 
@@ -199,28 +199,49 @@ class EnvioRegistroTest {
             var r = EnvioRegistro.enviar(c, 7, true, plan(1),
                     new RegistroCelular(RegistroCelular.FORMATO, RegistroCelular.VERSION, "yo", 12, null),
                     2026, 2, AHORA);
-            assertEquals(new EnvioRegistro.Resumen(true, 0, 0, 0, 0), r);
+            assertEquals(new EnvioRegistro.Resumen(true, 0, 0, 0, 0, 0), r);
         }
     }
 
     @Test
     void mensajeDelResumen() {
         String cola = " Si el panel no responde, quedan en cola y se mandan cuando vuelva la conexión.";
-        assertNull(EnvioRegistro.mensaje(new EnvioRegistro.Resumen(false, 3, 0, 0, 0)));
+        assertNull(EnvioRegistro.mensaje(new EnvioRegistro.Resumen(false, 3, 0, 0, 0, 0)));
         assertEquals("Se mandaron 1 sesión al panel." + cola,
-                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 1, 0, 0, 0)));
+                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 1, 0, 0, 0, 0)));
         assertEquals("Se mandaron 3 sesiones al panel." + cola,
-                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 3, 0, 0, 0)));
+                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 3, 0, 0, 0, 0)));
         assertEquals("Se mandaron 0 sesiones al panel." + cola,
-                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 0, 0, 0, 0)));
+                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 0, 0, 0, 0, 0)));
         assertEquals("Se mandaron 2 sesiones al panel. 1 quedó sin mandar por no tener duración." + cola,
-                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 2, 1, 0, 0)));
+                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 2, 1, 0, 0, 0)));
         assertEquals("Se mandaron 2 sesiones al panel. 4 quedaron sin mandar por no tener duración."
                         + " 1 no está en el plan. 3 no se pudieron convertir." + cola,
-                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 2, 4, 1, 3)));
+                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 2, 4, 1, 3, 0)));
         assertEquals("Se mandaron 1 sesión al panel. 2 no están en el plan." + cola,
-                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 1, 0, 2, 0)));
+                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 1, 0, 2, 0, 0)));
         assertEquals("Se mandaron 1 sesión al panel. 1 no se pudo convertir." + cola,
-                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 1, 0, 0, 1)));
+                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 1, 0, 0, 1, 0)));
+    }
+
+    @Test
+    void laSesionConvertidaQueNoSePudoEncolarCuentaAparte() {
+        java.util.List<String> publicadas = new java.util.ArrayList<>();
+        java.util.function.Consumer<panel.core.Registro> publicador = r -> {
+            if (r.idEnFuente().endsWith(":1")) throw new IllegalStateException("cola rota");
+            publicadas.add(r.idEnFuente());
+        };
+        var r = EnvioRegistro.enviar(publicador, "pc", 7, plan(1, 2), reg(ses(1, 60), ses(2, 45)), 2026, 2, AHORA);
+        assertEquals(new EnvioRegistro.Resumen(true, 1, 0, 0, 0, 1), r);
+        assertEquals(1, publicadas.size());
+    }
+
+    @Test
+    void mensajeConSesionesNoEncoladas() {
+        String cola = " Si el panel no responde, quedan en cola y se mandan cuando vuelva la conexión.";
+        assertEquals("Se mandaron 1 sesión al panel. 1 no se pudo encolar." + cola,
+                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 1, 0, 0, 0, 1)));
+        assertEquals("Se mandaron 2 sesiones al panel. 1 no se pudo convertir. 3 no se pudieron encolar." + cola,
+                EnvioRegistro.mensaje(new EnvioRegistro.Resumen(true, 2, 0, 0, 1, 3)));
     }
 }

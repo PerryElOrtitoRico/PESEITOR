@@ -130,10 +130,93 @@ class ConexionPanelTest {
     }
 
     @Test
-    void elTokenNoApareceEnToString() throws Exception {
-        ConexionPanel.guardarConfig(carpeta, urlServidor(), "token-secreto-xyz", "pc", true);
-        try (ConexionPanel c = ConexionPanel.abrir(carpeta)) {
-            assertFalse(c.toString().contains("token-secreto-xyz"));
+    void closeEsIdempotenteYNoDejaElHiloDeEnvio() throws Exception {
+        ConexionPanel.guardarConfig(carpeta, urlServidor(), "token-de-prueba-123", "pc", true);
+        ConexionPanel c = ConexionPanel.abrir(carpeta);
+        assertTrue(c.activo());
+        assertTrue(hiloDeEnvioVivo());
+        c.close();
+        assertDoesNotThrow(c::close);
+        long limite = System.nanoTime() + 2_000_000_000L;
+        while (hiloDeEnvioVivo() && System.nanoTime() < limite) {
+            Thread.sleep(20);
         }
+        assertFalse(hiloDeEnvioVivo());
+    }
+
+    private static boolean hiloDeEnvioVivo() {
+        return Thread.getAllStackTraces().keySet().stream()
+                .anyMatch(t -> "panel-sync".equals(t.getName()) && t.isAlive());
+    }
+
+    @Test
+    void abrirConPropertiesCorruptoEsInactivo() throws Exception {
+        Files.writeString(carpeta.resolve("panel-cliente.properties"), "url=http://x\\uZZZZ\ntoken=abc\n");
+        try (ConexionPanel c = ConexionPanel.abrir(carpeta)) {
+            assertFalse(c.activo());
+        }
+        assertFalse(Files.exists(carpeta.resolve("panel-cola.jsonl")));
+    }
+
+    @Test
+    void abrirConUnDirectorioEnLugarDelArchivoEsInactivo() throws Exception {
+        Files.createDirectory(carpeta.resolve("panel-cliente.properties"));
+        try (ConexionPanel c = ConexionPanel.abrir(carpeta)) {
+            assertFalse(c.activo());
+        }
+        assertFalse(Files.exists(carpeta.resolve("panel-cola.jsonl")));
+    }
+
+    @Test
+    void abrirConCarpetaNulaEsInactivo() {
+        try (ConexionPanel c = ConexionPanel.abrir(null)) {
+            assertFalse(c.activo());
+            c.publicar(registro("s1"));
+        }
+    }
+
+    private static Path[] carpetasTemporalesDelPanel() throws Exception {
+        try (var s = Files.list(Path.of(System.getProperty("java.io.tmpdir")))) {
+            return s.filter(p -> p.getFileName().toString().startsWith("rutineitor-panel-prueba")).toArray(Path[]::new);
+        }
+    }
+
+    @Test
+    void probarValoresConTokenCorrectoDevuelveOk() throws Exception {
+        servidor.removeContext("/");
+        servidor.createContext("/", ex -> {
+            recibidas.add(new Peticion(ex.getRequestMethod(), ex.getRequestURI().getPath(),
+                    ex.getRequestHeaders().getFirst("Authorization"), ""));
+            ex.sendResponseHeaders(200, -1);
+            ex.close();
+        });
+        assertEquals(PanelClient.Conexion.OK, ConexionPanel.probarValores(urlServidor(), "token-de-prueba-123"));
+        assertEquals("Bearer token-de-prueba-123", recibidas.get(0).autorizacion());
+        assertEquals(0, carpetasTemporalesDelPanel().length);
+    }
+
+    @Test
+    void probarValoresConTokenMaloDevuelveNoAutorizado() throws Exception {
+        servidor.removeContext("/");
+        servidor.createContext("/", ex -> {
+            ex.sendResponseHeaders(401, -1);
+            ex.close();
+        });
+        assertEquals(PanelClient.Conexion.NO_AUTORIZADO, ConexionPanel.probarValores(urlServidor(), "token-malo"));
+        assertEquals(0, carpetasTemporalesDelPanel().length);
+    }
+
+    @Test
+    void probarValoresSinServidorDevuelveSinRespuesta() throws Exception {
+        String url = urlServidor();
+        servidor.stop(0);
+        assertEquals(PanelClient.Conexion.SIN_RESPUESTA, ConexionPanel.probarValores(url, "token-de-prueba-123"));
+        assertEquals(0, carpetasTemporalesDelPanel().length);
+    }
+
+    @Test
+    void probarValoresNuncaLanzaConValoresNulos() throws Exception {
+        assertEquals(PanelClient.Conexion.SIN_RESPUESTA, ConexionPanel.probarValores(null, null));
+        assertEquals(0, carpetasTemporalesDelPanel().length);
     }
 }

@@ -41,6 +41,11 @@ public final class VentanaPrincipal extends JFrame {
         cambiar.addActionListener(e -> cambiarPerfil(ctx));
         menu.add(cambiar);
         barra.add(menu);
+        JMenu menuPanel = new JMenu("Panel");
+        JMenuItem conexion = new JMenuItem("Conexión con el panel…");
+        conexion.addActionListener(e -> DialogoPanel.mostrar(this, ctx));
+        menuPanel.add(conexion);
+        barra.add(menuPanel);
         setJMenuBar(barra);
 
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -49,8 +54,12 @@ public final class VentanaPrincipal extends JFrame {
             public void windowClosed(WindowEvent e) {
                 if (!cerrarBaseAlSalir) return;
                 try {
+                    ctx.panel().close(); // primero: así el hilo de envío no sobrevive a un fallo al cerrar la base
+                } catch (Exception ignored) {
+                    // se está cerrando el programa
+                }
+                try {
                     ctx.db.close();
-                    ctx.panel().close();
                 } catch (Exception ignored) {
                     // se está cerrando el programa
                 }
