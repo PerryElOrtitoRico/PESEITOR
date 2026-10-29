@@ -42,14 +42,16 @@ RUTINEITOR puede mandar lo que entrenás al **Panel**, el servidor personal dond
 
 Menú **Panel → Conexión con el panel…** y completá:
 
-- **URL** del panel, por ejemplo `http://192.168.1.13:7070`.
-- **Token** del dispositivo (campo de contraseña; se pide al administrador del panel y no se escribe en ningún mensaje).
-- **Nombre del dispositivo** (por ejemplo `pc`; el servidor igual lo reemplaza por el del token).
+- **Dirección del panel**, por ejemplo `http://192.168.1.13:7070`.
+- **Token** del dispositivo (campo de contraseña; la casilla **Mostrar** lo deja ver; no se escribe en ningún mensaje).
+- **Dispositivo** (por ejemplo `pc`; el servidor igual lo reemplaza por el del token).
 - La casilla **Enviar al panel**, que se puede destildar para pausar el envío sin perder la configuración.
+
+Los botones son **Probar conexión**, **Enviar historial de 1RM**, **Guardar** y **Cancelar**.
 
 **Probar conexión** verifica la URL y el token sin guardar. El botón **Enviar historial de 1RM** manda de una vez los 1RM que ya tenías guardados.
 
-La ventana también lista las **claves de 1RM** de tus ejercicios: son las que se escriben en el campo "métrica" al crear una meta en el panel. La clave sale del nombre del ejercicio: minúsculas, sin tildes, y todo lo que no sea letra o número pasa a un guion (sin guiones en los extremos). Ejemplos: `Press banca` → `1rm:press-banca`, `Sentadilla frontal (barra)` → `1rm:sentadilla-frontal-barra`. Si dos ejercicios dan la misma clave, solo se manda el de menor id.
+La ventana también lista las **claves de 1RM** de tus ejercicios: son las que se escriben en el campo "métrica" al crear una meta en el panel. La clave sale del nombre del ejercicio: minúsculas, sin tildes, y todo lo que no sea letra o número pasa a un guion (sin guiones en los extremos). Ejemplos: `Press banca` → `1rm:press-banca`, `Sentadilla frontal (barra)` → `1rm:sentadilla-frontal-barra`. Si dos ejercicios dan la misma clave, solo se manda el de menor id. Si renombrás un ejercicio, su clave cambia (`1rm:` más la clave nueva): los puntos ya enviados quedan con la clave vieja y una meta creada con esa clave deja de moverse. Usá **Enviar historial de 1RM** para reenviar todo el historial con la clave nueva y creá la meta de nuevo con ella.
 
 ### Dónde queda
 
@@ -58,7 +60,14 @@ Junto a la base de datos, en `~/.local/share/rutina/` (o `$XDG_DATA_HOME/rutina/
 - `panel-cliente.properties`: URL, token, dispositivo y si se envía (permisos 600 cuando el sistema lo permite).
 - `panel-cola.jsonl`: lo que todavía no llegó al panel. Solo existe si la conexión está activa.
 
-Si no hay URL o token, o la casilla está destildada, no se crea la cola, no se usa la red y no aparece ningún aviso.
+Si no hay dirección o token, o la casilla está destildada, no se crea la cola, no se usa la red y no aparece ningún aviso.
+
+### Cosas a tener en cuenta
+
+- La carpeta de datos (`~/.local/share/rutina/`, con `panel-cola.jsonl`) no se debe sincronizar entre dos PCs ni abrir con dos instancias del programa a la vez: el archivo de la cola está protegido solo dentro de un proceso.
+- Si cambiás la dirección del panel con registros pendientes, esos pendientes se mandan a la dirección nueva.
+- Una sesión que quitaste de un archivo que importás de nuevo **no** se borra del panel.
+- El programa descarta los registros que el servidor rechaza por inválidos (por ejemplo, con el reloj de la PC más de 24 horas adelantado) y solo deja una advertencia en el log. Importar el archivo otra vez los reenvía.
 
 ### Si el panel está apagado
 
@@ -94,6 +103,14 @@ En el repo no hay un script que arme `RUTINEITOR-windows.zip`: se arma a mano. C
 - Maven 3.9 (solo para compilar)
 
 ## Compilar, ejecutar y testear
+
+Antes de compilar hace falta instalar en el Maven local la librería `panel:sync-core:1.0.0-SNAPSHOT`, que no está en ningún repositorio público: vive en el repo `Panel` (`~/Escritorio/Hobbies/programacion/Proyectos/Panel`, rama `feature/conectar-rutineitor` hasta que se fusione; ahí está `PanelClient.probar()`, que RUTINEITOR necesita). Desde la carpeta de ese repo:
+
+```bash
+mvn -q -pl sync-core -am install -DskipTests
+```
+
+En un clon limpio o en otra PC, `mvn package` falla con un error de `panel:sync-core` sin resolver hasta que se haga esto. Después, desde la carpeta de RUTINEITOR:
 
 ```bash
 mvn package
