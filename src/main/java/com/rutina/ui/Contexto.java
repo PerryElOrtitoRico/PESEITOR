@@ -3,10 +3,12 @@ package com.rutina.ui;
 import com.rutina.model.Ejercicio;
 import com.rutina.model.Metodologia;
 import com.rutina.model.Perfil;
+import com.rutina.panel.PanelCompartido;
 import com.rutina.service.datos.Database;
 import com.rutina.service.datos.EjercicioRepo;
 import com.rutina.service.datos.MesocicloRepo;
 import com.rutina.service.datos.MetodologiaRepo;
+import com.rutina.service.datos.PerfilRepo;
 import com.rutina.service.datos.PlanPlioRepo;
 import com.rutina.service.datos.RegistroRepo;
 
@@ -28,11 +30,14 @@ public final class Contexto {
     final PlanPlioRepo planes;
     final MetodologiaRepo metodologiaRepo;
     final RegistroRepo registros;
+    private final PanelCompartido panel;
+    private final boolean esPerfilDelPanel;
     private Metodologia metodologia;
     private final List<Runnable> oyentes = new ArrayList<>();
 
-    Contexto(Database db, Perfil perfil) throws SQLException {
+    Contexto(Database db, Perfil perfil, PanelCompartido panel) throws SQLException {
         this.db = db;
+        this.panel = panel;
         this.perfil = perfil;
         this.ejercicios = new EjercicioRepo(db);
         this.mesociclos = new MesocicloRepo(db);
@@ -40,6 +45,17 @@ public final class Contexto {
         this.metodologiaRepo = new MetodologiaRepo(db);
         this.registros = new RegistroRepo(db);
         this.metodologia = metodologiaRepo.cargar();
+        List<Perfil> perfiles = new PerfilRepo(db).listar();
+        this.esPerfilDelPanel = !perfiles.isEmpty() && perfiles.get(0).id() == perfil.id();
+    }
+
+    PanelCompartido panel() {
+        return panel;
+    }
+
+    /** El panel recibe solo los datos del primer perfil (el de menor id). */
+    boolean esPerfilDelPanel() {
+        return esPerfilDelPanel;
     }
 
     Metodologia metodologia() {
