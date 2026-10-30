@@ -10,6 +10,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import panel.cliente.ConexionPanel;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.io.TempDir;
 import panel.core.ColaLocal;
+import panel.cliente.ConexionPanel;
 
 import java.net.ServerSocket;
 import java.net.URI;

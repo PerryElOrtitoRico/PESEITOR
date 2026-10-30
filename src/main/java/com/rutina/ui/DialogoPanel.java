@@ -1,11 +1,8 @@
 package com.rutina.ui;
 
 import com.rutina.panel.ClavesPanel;
-import com.rutina.panel.ConexionPanel;
 import com.rutina.panel.HistorialRm;
-import com.rutina.panel.NombreDispositivo;
 import com.rutina.panel.TextosPanel;
-import com.rutina.panel.ValidacionConexion;
 import com.rutina.service.datos.Database;
 import panel.core.ConfigPanel;
 import panel.core.PanelClient;
@@ -24,6 +21,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingWorker;
+import panel.cliente.ConexionPanel;
+import panel.cliente.NombreDispositivo;
+import panel.cliente.TextosConexion;
+import panel.cliente.ValidacionConexion;
+
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -246,7 +248,7 @@ final class DialogoPanel extends JDialog {
                     Thread.currentThread().interrupt();
                 } catch (ExecutionException e) {
                     JOptionPane.showMessageDialog(DialogoPanel.this,
-                            "No se pudo leer el historial: " + TextosPanel.causa(e.getCause()),
+                            "No se pudo leer el historial: " + TextosConexion.causa(e.getCause()),
                             "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
@@ -279,7 +281,7 @@ final class DialogoPanel extends JDialog {
                 } catch (ExecutionException e) {
                     ocupado(false, " ");
                     JOptionPane.showMessageDialog(DialogoPanel.this,
-                            "No se pudo guardar la configuración: " + TextosPanel.causa(e.getCause()), "Error",
+                            "No se pudo guardar la configuración: " + TextosConexion.causa(e.getCause()), "Error",
                             JOptionPane.ERROR_MESSAGE);
                 }
             }

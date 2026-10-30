@@ -1,6 +1,7 @@
 package com.rutina.panel;
 
 import com.rutina.model.Ejercicio;
+import panel.cliente.Clave;
 
 import java.util.Comparator;
 import java.util.List;
@@ -21,7 +22,7 @@ public final class ClavesPanel {
     }
 
     private static String linea(Ejercicio e, List<Ejercicio> delPerfil) {
-        String clave = ClaveEjercicio.de(e.nombre());
+        String clave = Clave.de(e.nombre());
         if (clave.isEmpty()) return "(sin clave utilizable) — " + e.nombre();
         String base = "1rm:" + clave + " — " + e.nombre();
         return RmAPanel.esRepresentante(e.id(), e.nombre(), delPerfil) ? base : base + " (repetida: no se manda)";
