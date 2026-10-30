@@ -1,6 +1,5 @@
 package com.rutina.ui;
 
-import com.rutina.panel.ConexionPanel;
 import com.rutina.panel.EnvioRegistro;
 import com.rutina.panel.NumeracionMeso;
 import com.rutina.model.Aproximacion;
@@ -50,6 +49,8 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.table.DefaultTableModel;
+import panel.cliente.ConexionPanel;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Desktop;

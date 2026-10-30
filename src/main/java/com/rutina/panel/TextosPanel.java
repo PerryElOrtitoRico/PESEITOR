@@ -17,11 +17,4 @@ public final class TextosPanel {
         for (String a : advertencias) sb.append('\n').append(a);
         return sb.toString();
     }
-
-    /** Mensaje de una excepción, o el nombre de su clase si no tiene. */
-    public static String causa(Throwable t) {
-        if (t == null) return "error desconocido";
-        String m = t.getMessage();
-        return m == null || m.isBlank() ? t.getClass().getSimpleName() : m;
-    }
 }

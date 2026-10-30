@@ -3,6 +3,7 @@ package com.rutina.panel;
 import com.rutina.registro.PlanCelular;
 import com.rutina.registro.RegistroCelular;
 import com.rutina.registro.SesionRegistro;
+import panel.cliente.ConexionPanel;
 import panel.core.Registro;
 
 import java.util.function.Consumer;
