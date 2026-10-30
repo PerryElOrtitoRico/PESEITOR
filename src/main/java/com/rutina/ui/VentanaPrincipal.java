@@ -2,8 +2,6 @@ package com.rutina.ui;
 
 import com.rutina.model.Mesociclo;
 import com.rutina.model.Perfil;
-import com.rutina.panel.ConexionPanel;
-import com.rutina.panel.PanelCompartido;
 import com.rutina.service.datos.Database;
 import com.rutina.service.datos.PerfilRepo;
 
@@ -14,6 +12,9 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
 import javax.swing.WindowConstants;
+import panel.cliente.ConexionPanel;
+import panel.cliente.PanelCompartido;
+
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 

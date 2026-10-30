@@ -104,7 +104,7 @@ En el repo no hay un script que arme `RUTINEITOR-windows.zip`: se arma a mano. C
 
 ## Compilar, ejecutar y testear
 
-Antes de compilar hace falta instalar en el Maven local la librería `panel:sync-core:1.0.0-SNAPSHOT`, que no está en ningún repositorio público: vive en el repo `Panel` (`~/Escritorio/Hobbies/programacion/Proyectos/Panel`, rama `feature/conectar-rutineitor` hasta que se fusione; ahí está `PanelClient.probar()`, que RUTINEITOR necesita). Desde la carpeta de ese repo:
+Antes de compilar hace falta instalar en el Maven local la librería `panel:sync-core:1.0.0-SNAPSHOT`, que no está en ningún repositorio público: vive en el repo `Panel` (`~/Escritorio/Hobbies/programacion/Proyectos/Panel`, rama `main`). Las clases genéricas del cliente (conexión, contenedor compartido, validación y claves de ejercicio) vienen de `sync-core`, paquete `panel.cliente`. Desde la carpeta de ese repo:
 
 ```bash
 mvn -q -pl sync-core -am install -DskipTests

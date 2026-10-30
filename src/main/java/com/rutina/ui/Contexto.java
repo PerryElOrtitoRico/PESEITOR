@@ -3,8 +3,6 @@ package com.rutina.ui;
 import com.rutina.model.Ejercicio;
 import com.rutina.model.Metodologia;
 import com.rutina.model.Perfil;
-import com.rutina.panel.ConexionPanel;
-import com.rutina.panel.PanelCompartido;
 import com.rutina.panel.RmAPanel;
 import com.rutina.service.datos.Database;
 import com.rutina.service.datos.EjercicioRepo;
@@ -15,6 +13,9 @@ import com.rutina.service.datos.PlanPlioRepo;
 import com.rutina.service.datos.RegistroRepo;
 
 import javax.swing.JOptionPane;
+import panel.cliente.ConexionPanel;
+import panel.cliente.PanelCompartido;
+
 import java.awt.Component;
 import java.sql.SQLException;
 import java.util.ArrayList;
