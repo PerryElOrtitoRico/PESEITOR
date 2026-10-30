@@ -4,6 +4,8 @@ import com.rutina.model.Ejercicio;
 import com.rutina.model.PuntoRm;
 import com.rutina.service.datos.EjercicioRepo;
 import com.rutina.service.datos.EjercicioRepo.RmRegistrado;
+import panel.cliente.Clave;
+import panel.cliente.ConexionPanel;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -29,14 +31,14 @@ public final class HistorialRm {
         List<Ejercicio> todos = ejercicios.listar(perfilId);
         int enviados = 0;
         for (Ejercicio e : todos) {
-            String clave = ClaveEjercicio.de(e.nombre());
+            String clave = Clave.de(e.nombre());
             if (clave.isEmpty()) {
                 advertencias.add("Sin clave utilizable para «" + e.nombre() + "»: no se mandó.");
                 continue;
             }
             if (!RmAPanel.esRepresentante(e.id(), e.nombre(), todos)) {
                 String representante = todos.stream()
-                        .filter(o -> clave.equals(ClaveEjercicio.de(o.nombre()))).findFirst().orElse(e).nombre();
+                        .filter(o -> clave.equals(Clave.de(o.nombre()))).findFirst().orElse(e).nombre();
                 advertencias.add("La clave 1rm:" + clave + " está repetida: se manda solo «" + representante
                         + "», no «" + e.nombre() + "».");
                 continue;

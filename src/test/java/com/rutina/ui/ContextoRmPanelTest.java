@@ -3,13 +3,13 @@ package com.rutina.ui;
 import com.rutina.model.Ejercicio;
 import com.rutina.model.Perfil;
 import com.rutina.model.Tipo;
-import com.rutina.panel.ConexionPanel;
-import com.rutina.panel.PanelCompartido;
 import com.rutina.service.datos.Database;
 import com.rutina.service.datos.PerfilRepo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import panel.core.ColaLocal;
+import panel.cliente.ConexionPanel;
+import panel.cliente.PanelCompartido;
 
 import java.nio.file.Path;
 import java.time.LocalDate;

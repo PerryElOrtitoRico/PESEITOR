@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import panel.core.ColaLocal;
+import panel.cliente.ConexionPanel;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
