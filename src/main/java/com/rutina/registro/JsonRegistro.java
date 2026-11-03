@@ -42,7 +42,7 @@ public final class JsonRegistro {
         }
         if (p == null) throw new IllegalArgumentException("El archivo del plan está vacío");
         if (!PlanCelular.FORMATO.equals(p.formato())) {
-            throw new IllegalArgumentException("No es un plan de RUTINEITOR (formato \"" + p.formato() + "\", se esperaba \""
+            throw new IllegalArgumentException("No es un plan de PESEITOR (formato \"" + p.formato() + "\", se esperaba \""
                     + PlanCelular.FORMATO + "\")");
         }
         if (p.version() != PlanCelular.VERSION) {
@@ -68,7 +68,7 @@ public final class JsonRegistro {
         }
         if (r == null) throw new IllegalArgumentException("El archivo del registro está vacío");
         if (!RegistroCelular.FORMATO.equals(r.formato())) {
-            throw new IllegalArgumentException("No es un registro de RUTINEITOR (formato \"" + r.formato() + "\", se esperaba \""
+            throw new IllegalArgumentException("No es un registro de PESEITOR (formato \"" + r.formato() + "\", se esperaba \""
                     + RegistroCelular.FORMATO + "\")");
         }
         if (r.version() != RegistroCelular.VERSION) {

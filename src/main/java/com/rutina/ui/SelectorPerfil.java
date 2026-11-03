@@ -24,7 +24,7 @@ final class SelectorPerfil {
         Object[] opciones = new Object[perfiles.size() + 1];
         for (int i = 0; i < perfiles.size(); i++) opciones[i] = perfiles.get(i).nombre();
         opciones[perfiles.size()] = NUEVO;
-        Object elegido = JOptionPane.showInputDialog(null, "Perfil:", "RUTINEITOR",
+        Object elegido = JOptionPane.showInputDialog(null, "Perfil:", "PESEITOR",
                 JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
         if (elegido == null) return null;
         if (elegido == NUEVO) return crear(repo, "Nombre del nuevo perfil (arranca sin 1RM cargados):");

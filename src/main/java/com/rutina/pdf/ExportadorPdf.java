@@ -84,7 +84,7 @@ public final class ExportadorPdf {
 
     private static void paginaGimnasio(Document doc, String perfil, Mesociclo mes, ResultadoMesociclo res, Metodologia m)
             throws DocumentException {
-        doc.add(new Paragraph("RUTINEITOR · " + perfil + " — mesociclo del " + mes.inicio().format(FECHA) + " al "
+        doc.add(new Paragraph("PESEITOR · " + perfil + " — mesociclo del " + mes.inicio().format(FECHA) + " al "
                 + mes.fin().minusDays(1).format(FECHA) + " (" + mes.microciclos() + " microciclos, variante "
                 + mes.microciclos() + mes.variante() + ")", TITULO));
         if (!vacio(mes.calentamiento())) doc.add(new Paragraph("Calentamiento: " + mes.calentamiento(), NORMAL));
