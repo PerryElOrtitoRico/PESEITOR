@@ -26,7 +26,7 @@ public final class VentanaPrincipal extends JFrame {
     private boolean cerrarBaseAlSalir = true;
 
     private VentanaPrincipal(Contexto ctx) {
-        super("RUTINEITOR — " + ctx.perfil.nombre());
+        super("PESEITOR — " + ctx.perfil.nombre());
         setIconImages(iconos());
         panelMesociclo = new PanelMesociclo(ctx);
         pestanas.addTab("Ejercicios", new PanelEjercicios(ctx));

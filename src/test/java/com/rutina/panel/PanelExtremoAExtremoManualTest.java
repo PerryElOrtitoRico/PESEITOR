@@ -72,7 +72,7 @@ class PanelExtremoAExtremoManualTest {
         }
     }
 
-    /** Registros de RUTINEITOR de un día. */
+    /** Registros de PESEITOR de un día. */
     private List<JsonObject> delDia(LocalDate fecha) {
         List<JsonObject> res = new ArrayList<>();
         for (JsonElement e : get("/api/dia/" + fecha).getAsJsonArray()) {
@@ -224,7 +224,7 @@ class PanelExtremoAExtremoManualTest {
         return o == null ? -1 : o.get("actualizadoEn").getAsLong();
     }
 
-    /** Ids de sesión de RUTINEITOR en esos días, tal cual vienen (con repetidos, si los hubiera). */
+    /** Ids de sesión de PESEITOR en esos días, tal cual vienen (con repetidos, si los hubiera). */
     private List<String> todasLasSesiones(List<LocalDate> fechas) {
         List<String> ids = new ArrayList<>();
         for (LocalDate f : fechas) ids.addAll(idsDeSesiones(delDia(f)));

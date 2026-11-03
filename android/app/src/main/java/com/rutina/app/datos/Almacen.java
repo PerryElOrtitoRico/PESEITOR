@@ -131,7 +131,7 @@ public class Almacen {
             guardarRegistro(registro);
             return registro;
         }
-        throw new IllegalArgumentException("El archivo no es un plan ni un registro de RUTINEITOR");
+        throw new IllegalArgumentException("El archivo no es un plan ni un registro de PESEITOR");
     }
 
     /** Los planes guardados, ordenados por inicio; los archivos dañados se apartan y se saltean. */

@@ -8,7 +8,7 @@
         android:name=".App"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
-        android:label="RUTINEITOR"
+        android:label="PESEITOR"
         android:theme="@style/Theme.Rutina">
         <activity
             android:name=".ui.MainActivity"

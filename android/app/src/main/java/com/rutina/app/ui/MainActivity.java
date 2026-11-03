@@ -20,7 +20,7 @@ import com.rutina.registro.RegistroCelular;
 import java.io.IOException;
 
 /**
- * Inicio de RUTINEITOR: pestañas Sesión · Planes · Exportar. También recibe planes y registros que llegan por el menú
+ * Inicio de PESEITOR: pestañas Sesión · Planes · Exportar. También recibe planes y registros que llegan por el menú
  * Compartir o "Abrir con" de Android, sin mirar el nombre ni el tipo del archivo (decide el campo "formato").
  */
 public class MainActivity extends AppCompatActivity {

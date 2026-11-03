@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Barra superior de RUTINEITOR: el nombre y los cuatro discos del ícono (lo único con color) -->
+<!-- Barra superior de PESEITOR: el nombre y los cuatro discos del ícono (lo único con color) -->
 <androidx.appcompat.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/barra"
@@ -8,7 +8,7 @@
     android:background="@drawable/fondo_barra"
     android:elevation="0dp"
     app:contentInsetStart="16dp"
-    app:title="RUTINEITOR"
+    app:title="PESEITOR"
     app:titleTextAppearance="@style/Rutina.TituloBarra">
 
     <LinearLayout

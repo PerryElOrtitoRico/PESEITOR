@@ -1,4 +1,4 @@
-# RUTINEITOR
+# PESEITOR
 
 Programa de escritorio para programar mesociclos de sobrecarga con el **método cubano de distribución de repeticiones** (H. Anselmi, *Actualizaciones sobre el entrenamiento de la potencia*, cap. 8). Reemplaza la planilla `Rutina.xlsx`: a partir del volumen y la intensidad que planificás para cada mesociclo, calcula solo las series × repeticiones × kg de cada ejercicio, con series parejas (escalera de peso) y contadores que muestran cuánto se aparta de la teoría. Exporta un PDF con el formato de la planilla del entrenador para llevar al gimnasio.
 
@@ -16,7 +16,7 @@ Programa de escritorio para programar mesociclos de sobrecarga con el **método 
 La app del celular es una app nativa de Android (código en [`android/`](android/)), instalada desde la PC por cable: no usa Play Store, servicios de Google ni internet. Guarda todo en el almacenamiento interno de la app (`com.rutina.app`).
 
 1. En la PC, pestaña **Mesociclo → Plan al celular**: guarda un `.json` con el plan. Pasalo al celular (WhatsApp a vos mismo, Drive, cable a Descargas).
-2. En el celular, tocá el archivo y elegí RUTINEITOR en **Compartir** o **Abrir con**, o en la app **Planes → Cargar archivo**. Después elegís microciclo y día en **Sesión** y anotás; se guarda sola.
+2. En el celular, tocá el archivo y elegí PESEITOR en **Compartir** o **Abrir con**, o en la app **Planes → Cargar archivo**. Después elegís microciclo y día en **Sesión** y anotás; se guarda sola.
 3. Al terminar el mesociclo (o cuando quieras), **Exportar → Compartir registro** o **Guardar en Descargas**, y pasá ese `.json` a la PC.
 4. En la PC, **Mesociclo → Importar registro**. La pestaña **Registro** muestra Planilla vs Entrenado.
 
@@ -28,7 +28,7 @@ cd android && ./gradlew test installDebug
 
 ## Panel
 
-RUTINEITOR puede mandar lo que entrenás al **Panel**, el servidor personal donde se junta la actividad de gimnasio, running, estudio y demás (repo `Panel`). Es opcional: sin configurar, el programa funciona igual que siempre.
+PESEITOR puede mandar lo que entrenás al **Panel**, el servidor personal donde se junta la actividad de gimnasio, running, estudio y demás (repo `Panel`). Es opcional: sin configurar, el programa funciona igual que siempre.
 
 ### Qué se manda y cuándo
 
@@ -91,11 +91,11 @@ PANEL_E2E_URL=http://localhost:8099 PANEL_E2E_TOKEN=demo mvn test -Dtest=PanelEx
 
 ## Descargar para Windows
 
-[RUTINEITOR-windows.zip](RUTINEITOR-windows.zip) trae Java incluido: no hace falta instalar nada. Descomprimilo y abrí `Abrir RUTINEITOR.bat` (pasos en [LEEME.txt](LEEME.txt)).
+[PESEITOR-windows.zip](PESEITOR-windows.zip) trae Java incluido: no hace falta instalar nada. Descomprimilo y abrí `Abrir PESEITOR.bat` (pasos en [LEEME.txt](LEEME.txt)).
 
 ### Regenerar el paquete de Windows
 
-En el repo no hay un script que arme `RUTINEITOR-windows.zip`: se arma a mano. Contiene una carpeta `RUTINEITOR/` con `rutineitor.jar` (el `jar-with-dependencies` que deja `mvn package` en `target/rutineitor.jar`), la carpeta `jre` (el Java para Windows que viene incluido), `Abrir RUTINEITOR.bat` y `LEEME.txt`. **Hay que rehacer el zip después de la conexión con el panel**, porque el jar ahora incluye la librería `sync-core` (y Jackson, que trae adentro); el zip actual no la tiene.
+En el repo no hay un script que arme `PESEITOR-windows.zip`: se arma a mano. Contiene una carpeta `PESEITOR/` con `rutineitor.jar` (el `jar-with-dependencies` que deja `mvn package` en `target/rutineitor.jar`), la carpeta `jre` (el Java para Windows que viene incluido), `Abrir PESEITOR.bat` y `LEEME.txt`. **Hay que rehacer el zip después de la conexión con el panel**, porque el jar ahora incluye la librería `sync-core` (y Jackson, que trae adentro); el zip actual no la tiene.
 
 ## Requisitos
 
@@ -110,7 +110,7 @@ Antes de compilar hace falta instalar en el Maven local la librería `panel:sync
 mvn -q -pl sync-core -am install -DskipTests
 ```
 
-En un clon limpio o en otra PC, `mvn package` falla con un error de `panel:sync-core` sin resolver hasta que se haga esto. Después, desde la carpeta de RUTINEITOR:
+En un clon limpio o en otra PC, `mvn package` falla con un error de `panel:sync-core` sin resolver hasta que se haga esto. Después, desde la carpeta de PESEITOR:
 
 ```bash
 mvn package
