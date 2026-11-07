@@ -112,6 +112,24 @@ public class Almacen {
      *                                  tiene plan
      */
     public Object cargarDesdeTexto(String json) throws IOException {
+        return cargarDesdeTexto(json, false);
+    }
+
+    /** El registro que se quiere cargar no tiene sesiones que el guardado sí tiene; nada se guardó. */
+    public static class PisaSesiones extends IllegalStateException {
+        public final int cantidad;
+
+        PisaSesiones(int cantidad) {
+            super(cantidad + " sesiones se perderían");
+            this.cantidad = cantidad;
+        }
+    }
+
+    /**
+     * Como {@link #cargarDesdeTexto(String)}; con {@code reemplazar} en false, un registro que borraría sesiones ya
+     * anotadas no se guarda y lanza {@link PisaSesiones}.
+     */
+    public Object cargarDesdeTexto(String json, boolean reemplazar) throws IOException {
         String texto = json.replace("\uFEFF", "").strip();
         String formato = null;
         try {
@@ -128,6 +146,9 @@ public class Almacen {
         if (RegistroCelular.FORMATO.equals(formato)) {
             RegistroCelular registro = JsonRegistro.registroDeJson(texto);
             if (plan(registro.mesocicloId()) == null) throw new IllegalArgumentException("Primero cargá el plan de este registro: no hay ningún plan con el id " + registro.mesocicloId());
+            RegistroCelular guardado = leerRegistro(archivoRegistro(registro.mesocicloId()));
+            int faltan = guardado == null ? 0 : guardado.sesionesQueFaltanEn(registro);
+            if (faltan > 0 && !reemplazar) throw new PisaSesiones(faltan);
             guardarRegistro(registro);
             return registro;
         }
