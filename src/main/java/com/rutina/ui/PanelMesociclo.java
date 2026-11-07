@@ -704,7 +704,7 @@ final class PanelMesociclo extends JPanel {
             }
             var plan = ArmadorPlan.armar(ctx.perfil.nombre(), actual, resultado, ctx.metodologia());
             int[] numeracion = NumeracionMeso.de(ctx.mesociclos.listar(ctx.perfil.id()), actual);
-            var resumen = EnvioRegistro.enviar(conexion, ctx.perfil.id(), true, plan, r,
+            var resumen = EnvioRegistro.enviar(conexion, ctx.perfil.id(), plan, r,
                     numeracion[0], numeracion[1], System.currentTimeMillis());
             String mensaje = EnvioRegistro.mensaje(resumen);
             if (mensaje != null) JOptionPane.showMessageDialog(this, mensaje);

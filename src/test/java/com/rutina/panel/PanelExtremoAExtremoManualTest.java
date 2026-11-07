@@ -125,7 +125,7 @@ class PanelExtremoAExtremoManualTest {
         long ahora = System.currentTimeMillis();
         try (ConexionPanel c = ConexionPanel.abrir(carpeta)) {
             assertTrue(c.activo());
-            var resumen = EnvioRegistro.enviar(c, PERFIL, true, plan, registro, MACRO, MESO, ahora - 10_000);
+            var resumen = EnvioRegistro.enviar(c, PERFIL, plan, registro, MACRO, MESO, ahora - 10_000);
             assertEquals(new EnvioRegistro.Resumen(true, 3, 1, 1, 0, 0), resumen);
             c.vaciarAhora();
 
@@ -206,7 +206,7 @@ class PanelExtremoAExtremoManualTest {
             // segunda importación, más tarde: mismos ids, sin duplicados, gana lo más nuevo
             List<String> antes = todasLasSesiones(List.of(f11, f12, f21, f22, f31));
             assertEquals(List.of(id11, id12, id22), antes);
-            var resumen2 = EnvioRegistro.enviar(c, PERFIL, true, plan, registro, MACRO, MESO, ahora);
+            var resumen2 = EnvioRegistro.enviar(c, PERFIL, plan, registro, MACRO, MESO, ahora);
             assertEquals(resumen, resumen2);
             c.vaciarAhora();
             esperar(() -> ahora == actualizadoEn(f11, id11) && ahora == actualizadoEn(f12, id12)
@@ -242,7 +242,7 @@ class PanelExtremoAExtremoManualTest {
         ConexionPanel.guardarConfig(carpeta, "http://127.0.0.1:" + puertoCerrado, token, "pc-prueba", true);
         try (ConexionPanel c = ConexionPanel.abrir(carpeta)) {
             var resumen = assertDoesNotThrow(() ->
-                    EnvioRegistro.enviar(c, PERFIL, true, plan, registro, MACRO, MESO, System.currentTimeMillis()));
+                    EnvioRegistro.enviar(c, PERFIL, plan, registro, MACRO, MESO, System.currentTimeMillis()));
             assertEquals(new EnvioRegistro.Resumen(true, 3, 1, 1, 0, 0), resumen);
             assertDoesNotThrow(c::vaciarAhora);
             assertEquals(3, c.pendientes());

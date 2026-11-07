@@ -18,9 +18,9 @@ public final class EnvioRegistro {
                           int noEncoladas) {
     }
 
-    public static Resumen enviar(ConexionPanel panel, long perfilId, boolean esPerfilDelPanel, PlanCelular plan,
+    public static Resumen enviar(ConexionPanel panel, long perfilId, PlanCelular plan,
                                  RegistroCelular registro, int macro, int meso, long ahoraMs) {
-        if (!esPerfilDelPanel || panel == null || !panel.activo()) return new Resumen(false, 0, 0, 0, 0, 0);
+        if (panel == null || !panel.activo()) return new Resumen(false, 0, 0, 0, 0, 0);
         return enviar(panel::publicar, panel.dispositivo(), perfilId, plan, registro, macro, meso, ahoraMs);
     }
 

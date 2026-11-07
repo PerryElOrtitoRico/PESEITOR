@@ -91,7 +91,7 @@ class EnvioRegistroTest {
     @Test
     void enviaLasSesionesConvertibles() throws Exception {
         try (ConexionPanel c = conexionActiva()) {
-            var r = EnvioRegistro.enviar(c, 7, true, plan(1, 2), reg(ses(1, 60), ses(2, 45)), 2026, 2, AHORA);
+            var r = EnvioRegistro.enviar(c, 7, plan(1, 2), reg(ses(1, 60), ses(2, 45)), 2026, 2, AHORA);
             assertEquals(new EnvioRegistro.Resumen(true, 2, 0, 0, 0, 0), r);
             esperar(() -> cuerpos.size() >= 2);
         }
@@ -103,7 +103,7 @@ class EnvioRegistroTest {
     @Test
     void cuentaSinDuracionYFueraDelPlan() throws Exception {
         try (ConexionPanel c = conexionActiva()) {
-            var r = EnvioRegistro.enviar(c, 7, true, plan(1, 2, 3),
+            var r = EnvioRegistro.enviar(c, 7, plan(1, 2, 3),
                     reg(ses(1, 60), ses(2, null), ses(3, 700), ses(4, 30)), 2026, 2, AHORA);
             assertEquals(new EnvioRegistro.Resumen(true, 1, 2, 1, 0, 0), r);
         }
@@ -113,7 +113,7 @@ class EnvioRegistroTest {
     void fechaInvalidaCuentaEnOtras() throws Exception {
         try (ConexionPanel c = conexionActiva()) {
             var mala = new SesionRegistro(1, 1, "no-es-fecha", 3, 3, List.of(), 60);
-            var r = EnvioRegistro.enviar(c, 7, true, plan(1), reg(mala), 2026, 2, AHORA);
+            var r = EnvioRegistro.enviar(c, 7, plan(1), reg(mala), 2026, 2, AHORA);
             assertEquals(new EnvioRegistro.Resumen(true, 0, 0, 0, 1, 0), r);
         }
     }
@@ -125,9 +125,9 @@ class EnvioRegistroTest {
         servidor.stop(0); // sin red: se ve lo que queda en cola
         try (ConexionPanel c = ConexionPanel.abrir(carpeta)) {
             var registro = reg(ses(1, 60), ses(2, 45));
-            EnvioRegistro.enviar(c, 7, true, plan(1, 2), registro, 2026, 2, AHORA);
+            EnvioRegistro.enviar(c, 7, plan(1, 2), registro, 2026, 2, AHORA);
             var primera = new ColaLocal(carpeta.resolve("panel-cola.jsonl")).pendientes();
-            EnvioRegistro.enviar(c, 7, true, plan(1, 2), registro, 2026, 2, AHORA + 5_000);
+            EnvioRegistro.enviar(c, 7, plan(1, 2), registro, 2026, 2, AHORA + 5_000);
             var cola = new ColaLocal(carpeta.resolve("panel-cola.jsonl"));
             assertEquals(List.of("ses:7:12:1:1", "ses:7:12:1:2"), ids(cola));
             assertEquals(2, primera.size());
@@ -138,9 +138,9 @@ class EnvioRegistroTest {
     @Test
     void reimportarNoDuplicaLoRecibidoPorElServidor() throws Exception {
         try (ConexionPanel c = conexionActiva()) {
-            EnvioRegistro.enviar(c, 7, true, plan(1), reg(ses(1, 60)), 2026, 2, AHORA);
+            EnvioRegistro.enviar(c, 7, plan(1), reg(ses(1, 60)), 2026, 2, AHORA);
             esperar(() -> cuerpos.size() >= 1);
-            EnvioRegistro.enviar(c, 7, true, plan(1), reg(ses(1, 60)), 2026, 2, AHORA + 5_000);
+            EnvioRegistro.enviar(c, 7, plan(1), reg(ses(1, 60)), 2026, 2, AHORA + 5_000);
             esperar(() -> cuerpos.size() >= 2);
         }
         assertEquals(2, cuerpos.size());
@@ -152,19 +152,8 @@ class EnvioRegistroTest {
     @Test
     void panelInactivoNoPublicaNada() throws Exception {
         try (ConexionPanel c = ConexionPanel.abrir(carpeta)) {
-            var r = EnvioRegistro.enviar(c, 7, true, plan(1), reg(ses(1, 60)), 2026, 2, AHORA);
+            var r = EnvioRegistro.enviar(c, 7, plan(1), reg(ses(1, 60)), 2026, 2, AHORA);
             assertEquals(new EnvioRegistro.Resumen(false, 0, 0, 0, 0, 0), r);
-        }
-        assertFalse(Files.exists(carpeta.resolve("panel-cola.jsonl")));
-        assertTrue(cuerpos.isEmpty());
-    }
-
-    @Test
-    void otroPerfilNoPublicaNada() throws Exception {
-        try (ConexionPanel c = conexionActiva()) {
-            var r = EnvioRegistro.enviar(c, 8, false, plan(1), reg(ses(1, 60)), 2026, 2, AHORA);
-            assertEquals(new EnvioRegistro.Resumen(false, 0, 0, 0, 0, 0), r);
-            c.vaciarAhora();
         }
         assertFalse(Files.exists(carpeta.resolve("panel-cola.jsonl")));
         assertTrue(cuerpos.isEmpty());
@@ -176,7 +165,7 @@ class EnvioRegistroTest {
                 "token-de-prueba-123", "pc", true);
         servidor.stop(0);
         try (ConexionPanel c = ConexionPanel.abrir(carpeta)) {
-            var r = EnvioRegistro.enviar(c, 7, true, plan(1, 2), reg(ses(1, 60), ses(2, 45)), 2026, 2, AHORA);
+            var r = EnvioRegistro.enviar(c, 7, plan(1, 2), reg(ses(1, 60), ses(2, 45)), 2026, 2, AHORA);
             assertEquals(new EnvioRegistro.Resumen(true, 2, 0, 0, 0, 0), r);
             c.vaciarAhora();
         }
@@ -189,7 +178,7 @@ class EnvioRegistroTest {
         try (ConexionPanel c = conexionActiva()) {
             var rara = new SesionRegistro(1, 1, "2026-05-01", 3, 3, List.of(
                     new EjercicioRegistro("1-1", null, Map.of("80", "  me dolió el codo "), null)), 60);
-            var r = EnvioRegistro.enviar(c, 7, true, plan(1, 2), reg(rara, ses(2, 45)), 2026, 2, AHORA);
+            var r = EnvioRegistro.enviar(c, 7, plan(1, 2), reg(rara, ses(2, 45)), 2026, 2, AHORA);
             assertEquals(new EnvioRegistro.Resumen(true, 2, 0, 0, 0, 0), r);
         }
     }
@@ -197,7 +186,7 @@ class EnvioRegistroTest {
     @Test
     void registroSinSesionesNoEnviaNada() throws Exception {
         try (ConexionPanel c = conexionActiva()) {
-            var r = EnvioRegistro.enviar(c, 7, true, plan(1),
+            var r = EnvioRegistro.enviar(c, 7, plan(1),
                     new RegistroCelular(RegistroCelular.FORMATO, RegistroCelular.VERSION, "yo", 12, null),
                     2026, 2, AHORA);
             assertEquals(new EnvioRegistro.Resumen(true, 0, 0, 0, 0, 0), r);

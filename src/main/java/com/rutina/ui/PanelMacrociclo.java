@@ -306,6 +306,7 @@ final class PanelMacrociclo extends JPanel {
                 + " con todo lo armado?", "Borrar", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
         try {
             ctx.mesociclos.borrar(mc.id());
+            ctx.registros.borrar(mc.id());
             ctx.cambio();
         } catch (Exception e) {
             Contexto.error(this, e);
