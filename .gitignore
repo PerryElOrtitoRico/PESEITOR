@@ -7,3 +7,4 @@ target/
 Libros/
 .superpowers/
 dist/
+*-windows.zip

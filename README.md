@@ -91,11 +91,17 @@ PANEL_E2E_URL=http://localhost:8099 PANEL_E2E_TOKEN=demo mvn test -Dtest=PanelEx
 
 ## Descargar para Windows
 
-[PESEITOR-windows.zip](PESEITOR-windows.zip) trae Java incluido: no hace falta instalar nada. Descomprimilo y abrí `Abrir PESEITOR.bat` (pasos en [LEEME.txt](LEEME.txt)).
+`PESEITOR-windows.zip` trae Java incluido: no hace falta instalar nada. Se baja de [Releases](https://github.com/PerryElOrtitoRico/PESEITOR/releases/latest) (no está dentro del repo). Descomprimilo y abrí `Abrir PESEITOR.bat` (pasos en [LEEME.txt](LEEME.txt)).
 
 ### Regenerar el paquete de Windows
 
-En el repo no hay un script que arme `PESEITOR-windows.zip`: se arma a mano. Contiene una carpeta `PESEITOR/` con `rutineitor.jar` (el `jar-with-dependencies` que deja `mvn package` en `target/rutineitor.jar`), la carpeta `jre` (el Java para Windows que viene incluido), `Abrir PESEITOR.bat` y `LEEME.txt`. **Hay que rehacer el zip después de la conexión con el panel**, porque el jar ahora incluye la librería `sync-core` (y Jackson, que trae adentro); el zip actual no la tiene.
+No hay un script: se arma a mano en `dist/` (ignorada por git). El zip contiene una carpeta `PESEITOR/` con:
+
+- `rutineitor.jar`: el `jar-with-dependencies` que deja `mvn package` en `target/rutineitor.jar`.
+- `jre/`: un Java 21 para Windows (se puede sacar del zip anterior).
+- `Abrir PESEITOR.bat` y `LEEME.txt`.
+
+Después se sube como archivo de un Release nuevo en GitHub. El zip no se commitea: pesa unos 68 MB y cada versión quedaría para siempre en el historial.
 
 ## Requisitos
 
