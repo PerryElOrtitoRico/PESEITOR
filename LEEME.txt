@@ -1,12 +1,13 @@
-RUTINEITOR para Windows
+PESEITOR para Windows
 
-1. Descargar RUTINEITOR-windows.zip (boton "View raw" / "Download").
+1. Descargar PESEITOR-windows.zip desde la pagina de Releases del repo:
+   https://github.com/PerryElOrtitoRico/PESEITOR/releases/latest
 2. Descomprimirlo donde quieras (por ejemplo en Documentos).
-3. Doble click en "Abrir RUTINEITOR.bat".
+3. Doble click en "Abrir PESEITOR.bat".
    Si Windows avisa que el archivo no es de confianza: "Mas informacion" -> "Ejecutar de todas formas".
 4. La primera vez pide un nombre y crea el perfil.
 
 No hace falta instalar Java: viene incluido en la carpeta "jre".
 
-Opcional: el menu "Panel -> Conexion con el panel..." conecta RUTINEITOR con el Panel personal.
+Opcional: el menu "Panel -> Conexion con el panel..." conecta PESEITOR con el Panel personal.
 Si no lo configuras no se usa y el programa funciona igual que siempre.
