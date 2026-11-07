@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.tabs.TabLayout;
 import com.rutina.app.App;
 import com.rutina.app.R;
+import com.rutina.app.datos.Almacen;
 import com.rutina.registro.PlanCelular;
 import com.rutina.registro.RegistroCelular;
 
@@ -122,8 +123,12 @@ public class MainActivity extends AppCompatActivity {
 
     /** Carga un plan o un registro (según su campo "formato"); lo deja activo y muestra la pestaña Sesión. */
     void cargarTexto(String texto) {
+        cargarTexto(texto, false);
+    }
+
+    private void cargarTexto(String texto, boolean reemplazar) {
         try {
-            Object cargado = App.almacen().cargarDesdeTexto(texto);
+            Object cargado = App.almacen().cargarDesdeTexto(texto, reemplazar);
             if (cargado instanceof PlanCelular) {
                 PlanCelular plan = (PlanCelular) cargado;
                 App.almacen().activo(plan.mesocicloId());
@@ -134,6 +139,9 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Registro cargado: " + registro.sesiones().size() + " sesiones", Toast.LENGTH_SHORT).show();
             }
             irASesion();
+        } catch (Almacen.PisaSesiones e) {
+            Dialogos.confirmar(this, "Este registro no tiene " + e.cantidad + (e.cantidad == 1 ? " sesión que ya anotaste" : " sesiones que ya anotaste")
+                    + " en el celular. Si lo cargás, se pierden. ¿Reemplazar igual?", "Reemplazar", () -> cargarTexto(texto, true));
         } catch (IllegalArgumentException e) {
             Dialogos.aviso(this, "No se pudo cargar", String.valueOf(e.getMessage()));
         } catch (IOException e) {

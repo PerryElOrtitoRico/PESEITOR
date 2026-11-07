@@ -118,4 +118,21 @@ class AlmacenTest {
         assertEquals(2, a.registro(3).sesiones().size());
         assertThrows(IllegalArgumentException.class, () -> a.cargarDesdeTexto("{roto"));
     }
+
+    @Test
+    void noPisaSesionesSinPermiso() throws IOException {
+        Almacen a = new Almacen(dir);
+        a.cargarDesdeTexto(ejemplo("plan-ejemplo.json"));
+        RegistroCelular completo = (RegistroCelular) a.cargarDesdeTexto(ejemplo("registro-ejemplo.json"));
+        RegistroCelular viejo = new RegistroCelular(completo.formato(), completo.version(), completo.perfil(),
+                completo.mesocicloId(), completo.sesiones().subList(0, 1));
+        String json = JsonRegistro.registroAJson(viejo);
+
+        Almacen.PisaSesiones e = assertThrows(Almacen.PisaSesiones.class, () -> a.cargarDesdeTexto(json));
+        assertEquals(1, e.cantidad);
+        assertEquals(2, a.registro(3).sesiones().size()); // no se tocó
+
+        a.cargarDesdeTexto(json, true);
+        assertEquals(1, a.registro(3).sesiones().size());
+    }
 }

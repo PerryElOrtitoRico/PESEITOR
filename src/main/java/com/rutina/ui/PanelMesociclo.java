@@ -679,6 +679,11 @@ final class PanelMesociclo extends JPanel {
                                 + "; el elegido es el " + actual.id() + "). No se guardó.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+            int faltan = ctx.registros.cargar(actual.id()).map(g -> g.sesionesQueFaltanEn(r)).orElse(0);
+            if (faltan > 0 && JOptionPane.showConfirmDialog(this, "El registro guardado tiene " + faltan
+                            + (faltan == 1 ? " sesión que este archivo no tiene" : " sesiones que este archivo no tiene")
+                            + ". Si lo importás, se pierden.\n¿Reemplazar igual?", "Reemplazar registro",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) return;
             ctx.registros.guardar(r);
             // se redibuja después, como en guardar(): no se destruyen componentes en medio de su evento
             SwingUtilities.invokeLater(this::recalcular);
