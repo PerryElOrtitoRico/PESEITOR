@@ -1,10 +1,13 @@
 package com.rutina.ui;
 
+import com.rutina.model.Macrociclo;
 import com.rutina.model.Mesociclo;
 import com.rutina.model.Metodologia;
 import com.rutina.model.ParametrosTipo;
 import com.rutina.model.PlanPliometria;
 import com.rutina.model.Tipo;
+import com.rutina.pdf.ExportadorPdfAnio;
+import com.rutina.service.NombreMeso;
 import com.rutina.service.calculo.CalculadoraMesociclo;
 import com.rutina.service.calculo.DistribucionVolumen;
 import com.rutina.service.calculo.ParametrosInvalidosException;
@@ -50,7 +53,7 @@ final class PanelMacrociclo extends JPanel {
     private final Consumer<Mesociclo> abrir;
     private final JSpinner anio = new JSpinner(new SpinnerNumberModel(LocalDate.now().getYear(), 2000, 2100, 1));
     private final DefaultTableModel modelo = new DefaultTableModel(
-            new Object[]{"Semana (lunes)", "Mes", "Mesociclo", "Microciclo", "Potencia (reps @ IMR)",
+            new Object[]{"Semana (lunes)", "Mes", "Macrociclo", "Mesociclo", "Microciclo", "Potencia (reps @ IMR)",
                     "Fuerza (reps @ IMR)", "Pliometría"}, 0) {
         @Override
         public boolean isCellEditable(int r, int c) {
@@ -62,6 +65,9 @@ final class PanelMacrociclo extends JPanel {
     private final List<LocalDate> lunes = new ArrayList<>();
     private List<Mesociclo> mesociclos = List.of();
     private List<PlanPliometria> planes = List.of();
+    private List<Macrociclo> macros = List.of();
+    private final javax.swing.DefaultListModel<Macrociclo> modeloMacros = new javax.swing.DefaultListModel<>();
+    private final javax.swing.JList<Macrociclo> listaMacros = new javax.swing.JList<>(modeloMacros);
     private final javax.swing.DefaultListModel<PlanPliometria> modeloPlanes = new javax.swing.DefaultListModel<>();
     private final javax.swing.JList<PlanPliometria> listaPlanes = new javax.swing.JList<>(modeloPlanes);
 
@@ -79,6 +85,7 @@ final class PanelMacrociclo extends JPanel {
         boton(arriba, "Editar", this::editarMesociclo);
         boton(arriba, "Borrar", this::borrarMesociclo);
         boton(arriba, "Armar →", this::armar);
+        boton(arriba, "Exportar año (PDF)", this::exportarAnio);
         add(arriba, BorderLayout.NORTH);
 
         tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -90,7 +97,10 @@ final class PanelMacrociclo extends JPanel {
         });
         JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(tabla), grafico);
         split.setResizeWeight(0.6);
-        JSplitPane conPlanes = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, split, panelPlanes());
+        JPanel derecha = new JPanel(new GridLayout(2, 1));
+        derecha.add(panelMacros());
+        derecha.add(panelPlanes());
+        JSplitPane conPlanes = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, split, derecha);
         conPlanes.setResizeWeight(1.0);
         add(conPlanes, BorderLayout.CENTER);
         add(new JLabel("  Doble click en una semana: arma su mesociclo o, si solo tiene pliometría, edita ese plan."), BorderLayout.SOUTH);
@@ -108,6 +118,15 @@ final class PanelMacrociclo extends JPanel {
         try {
             mesociclos = ctx.mesociclos.listar(ctx.perfil.id());
             planes = ctx.planes.listar(ctx.perfil.id());
+            macros = ctx.macros.listar(ctx.perfil.id());
+            Macrociclo macroElegido = listaMacros.getSelectedValue();
+            modeloMacros.clear();
+            macros.forEach(modeloMacros::addElement);
+            if (macroElegido != null) {
+                for (int i = 0; i < modeloMacros.size(); i++) {
+                    if (modeloMacros.get(i).id() == macroElegido.id()) listaMacros.setSelectedIndex(i);
+                }
+            }
             PlanPliometria elegido = listaPlanes.getSelectedValue();
             modeloPlanes.clear();
             planes.forEach(modeloPlanes::addElement);
@@ -130,19 +149,23 @@ final class PanelMacrociclo extends JPanel {
             lunes.add(d);
             String mes = d.getMonthValue() != mesAnterior ? d.getMonth().getDisplayName(TextStyle.FULL, ES).toUpperCase(ES) : "";
             mesAnterior = d.getMonthValue();
-            Object[] fila = {d.format(FECHA), mes, "", "", "", "", ""};
+            Object[] fila = {d.format(FECHA), mes, "", "", "", "", "", ""};
             Mesociclo mc = mesocicloEn(d);
             if (mc != null) {
                 int micro = (int) java.time.temporal.ChronoUnit.WEEKS.between(mc.inicio(), d);
-                fila[2] = "Mesociclo " + (mesociclos.indexOf(mc) + 1) + (mc.variante() != null ? " (" + mc.microciclos() + mc.variante() + ")" : "");
-                fila[3] = (micro + 1) + " / " + mc.microciclos();
-                fila[4] = textoMicro(m, mc, mc.potencia(), micro);
-                fila[5] = textoMicro(m, mc, mc.fuerza(), micro);
+                Macrociclo macro = macroDe(mc);
+                fila[2] = macro == null ? "" : macro.nombre();
+                String nombre = NombreMeso.etiqueta(mc);
+                fila[3] = nombre != null ? nombre
+                        : "Mesociclo " + (mesociclos.indexOf(mc) + 1) + (mc.variante() != null ? " (" + mc.microciclos() + mc.variante() + ")" : "");
+                fila[4] = (micro + 1) + " / " + mc.microciclos();
+                fila[5] = textoMicro(m, mc, mc.potencia(), micro);
+                fila[6] = textoMicro(m, mc, mc.fuerza(), micro);
             }
             PlanPliometria p = planEn(d);
             if (p != null) {
                 int sem = (int) java.time.temporal.ChronoUnit.WEEKS.between(p.inicio(), d);
-                fila[6] = "Nivel " + p.nivel() + " · semana " + (sem + 1) + " / 4";
+                fila[7] = "Nivel " + p.nivel() + " · semana " + (sem + 1) + " / 4";
             }
             modelo.addRow(fila);
             d = d.plusWeeks(1);
@@ -160,6 +183,11 @@ final class PanelMacrociclo extends JPanel {
         } catch (ParametrosInvalidosException e) {
             return "⚠ " + e.getMessage();
         }
+    }
+
+    private Macrociclo macroDe(Mesociclo mc) {
+        if (mc.macroId() == null) return null;
+        return macros.stream().filter(x -> x.id() == mc.macroId()).findFirst().orElse(null);
     }
 
     private Mesociclo mesocicloEn(LocalDate lunesSemana) {
@@ -236,6 +264,14 @@ final class PanelMacrociclo extends JPanel {
     private void dialogoMesociclo(Mesociclo mc) {
         JTextField inicio = new JTextField(mc.inicio().format(FECHA), 10);
         JSpinner micro = new JSpinner(new SpinnerNumberModel(mc.microciclos(), 2, 5, 1));
+        JTextField objetivo = new JTextField(mc.objetivo() == null ? "" : mc.objetivo(), 14);
+        objetivo.setToolTipText("Ejercicio o meta del mesociclo, ej. Sentadilla");
+        JComboBox<Object> macro = new JComboBox<>();
+        macro.addItem("(ninguno)");
+        macros.forEach(macro::addItem);
+        macro.setRenderer((l, v, i, sel, foco) -> new JLabel(v instanceof Macrociclo x ? x.nombre() : String.valueOf(v)));
+        macro.setSelectedItem(macros.stream().filter(x -> mc.macroId() != null && x.id() == mc.macroId()).findFirst().orElse(null));
+        if (macro.getSelectedItem() == null) macro.setSelectedIndex(0);
         JSpinner potVol = new JSpinner(new SpinnerNumberModel(mc.potencia().volumen(), 0, 5000, 10));
         JSpinner potImr = new JSpinner(new SpinnerNumberModel(Math.max(mc.potencia().imr(), 60), 60, 80, 1));
         JSpinner fzaVol = new JSpinner(new SpinnerNumberModel(mc.fuerza().volumen(), 0, 5000, 10));
@@ -243,6 +279,10 @@ final class PanelMacrociclo extends JPanel {
         JPanel p = new JPanel(new GridLayout(0, 2, 6, 6));
         p.add(new JLabel("Inicio (lunes, dd/mm/aaaa)"));
         p.add(inicio);
+        p.add(new JLabel("Objetivo del mesociclo"));
+        p.add(objetivo);
+        p.add(new JLabel("Macrociclo"));
+        p.add(macro);
         p.add(new JLabel("Microciclos (semanas)"));
         p.add(micro);
         p.add(new JLabel("Potencia: volumen total (reps)"));
@@ -266,7 +306,8 @@ final class PanelMacrociclo extends JPanel {
                 // si cambió la cantidad de microciclos, la variante elegida puede dejar de existir
                 Character variante = n == mc.microciclos() ? mc.variante() : null;
                 ctx.mesociclos.guardar(new Mesociclo(mc.id(), mc.perfilId(), d, n, pot, fza, variante, mc.dias(),
-                        mc.aproximaciones(), mc.bloques(), mc.calentamiento(), mc.auxiliares(), mc.rmUsados()));
+                        mc.aproximaciones(), mc.bloques(), mc.calentamiento(), mc.auxiliares(), mc.rmUsados(),
+                        objetivo.getText().trim(), macro.getSelectedItem() instanceof Macrociclo x ? x.id() : null));
                 ctx.cambio();
                 return;
             } catch (java.time.format.DateTimeParseException e) {
@@ -316,6 +357,107 @@ final class PanelMacrociclo extends JPanel {
     private void armar() {
         Mesociclo mc = mesocicloSeleccionado();
         if (mc != null) abrir.accept(mc);
+    }
+
+    private void exportarAnio() {
+        javax.swing.JFileChooser fc = new javax.swing.JFileChooser();
+        java.io.File docs = new java.io.File(System.getProperty("user.home"), "Documentos");
+        fc.setCurrentDirectory(docs.isDirectory() ? docs : new java.io.File(System.getProperty("user.home")));
+        int y = (Integer) anio.getValue();
+        fc.setSelectedFile(new java.io.File(fc.getCurrentDirectory(), "Macrociclo_" + y + ".pdf"));
+        if (fc.showSaveDialog(this) != javax.swing.JFileChooser.APPROVE_OPTION) return;
+        java.nio.file.Path destino = fc.getSelectedFile().toPath();
+        if (!destino.toString().toLowerCase().endsWith(".pdf")) destino = java.nio.file.Path.of(destino + ".pdf");
+        List<String> cabecera = new ArrayList<>();
+        for (int c = 0; c < modelo.getColumnCount(); c++) cabecera.add(modelo.getColumnName(c));
+        List<String[]> filas = new ArrayList<>();
+        for (int r = 0; r < modelo.getRowCount(); r++) {
+            String[] f = new String[modelo.getColumnCount()];
+            for (int c = 0; c < f.length; c++) f[c] = String.valueOf(modelo.getValueAt(r, c));
+            filas.add(f);
+        }
+        try {
+            ExportadorPdfAnio.exportar(destino, ctx.perfil.nombre(), y, cabecera, filas);
+            JOptionPane.showMessageDialog(this, "PDF guardado en " + destino);
+        } catch (Exception e) {
+            Contexto.error(this, e);
+        }
+    }
+
+    // ---- macrociclos ----------------------------------------------------------------------------------------------
+
+    private JPanel panelMacros() {
+        listaMacros.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        listaMacros.setCellRenderer((l, m, i, sel, foco) -> {
+            JLabel lb = new JLabel("<html><b>" + m.nombre() + "</b><br>" + m.objetivo() + "</html>");
+            lb.setOpaque(true);
+            lb.setBorder(javax.swing.BorderFactory.createEmptyBorder(4, 6, 4, 6));
+            lb.setBackground(sel ? l.getSelectionBackground() : l.getBackground());
+            lb.setForeground(sel ? l.getSelectionForeground() : l.getForeground());
+            return lb;
+        });
+        listaMacros.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && listaMacros.getSelectedValue() != null) dialogoMacro(listaMacros.getSelectedValue());
+            }
+        });
+        JPanel botones = new JPanel(new GridLayout(1, 3, 4, 4));
+        boton(botones, "Nuevo", () -> dialogoMacro(new Macrociclo(0, ctx.perfil.id(), "", "")));
+        boton(botones, "Editar", () -> {
+            if (listaMacros.getSelectedValue() != null) dialogoMacro(listaMacros.getSelectedValue());
+            else JOptionPane.showMessageDialog(this, "Elegí un macrociclo en la lista.");
+        });
+        boton(botones, "Borrar", this::borrarMacro);
+        JPanel p = new JPanel(new BorderLayout(4, 4));
+        p.setBorder(javax.swing.BorderFactory.createTitledBorder("Macrociclos"));
+        p.add(new JScrollPane(listaMacros), BorderLayout.CENTER);
+        p.add(botones, BorderLayout.SOUTH);
+        p.setPreferredSize(new java.awt.Dimension(250, 200));
+        return p;
+    }
+
+    /** Crear (id 0) o editar un macrociclo: nombre y objetivo. Los mesociclos se asignan en su diálogo. */
+    private void dialogoMacro(Macrociclo macro) {
+        JTextField nombre = new JTextField(macro.nombre(), 14);
+        JTextField objetivo = new JTextField(macro.objetivo(), 14);
+        JPanel p = new JPanel(new GridLayout(0, 2, 6, 6));
+        p.add(new JLabel("Nombre"));
+        p.add(nombre);
+        p.add(new JLabel("Objetivo (ej. Fuerza)"));
+        p.add(objetivo);
+        while (true) {
+            if (JOptionPane.showConfirmDialog(this, p, macro.id() == 0 ? "Nuevo macrociclo" : "Editar macrociclo",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) return;
+            if (nombre.getText().isBlank()) {
+                JOptionPane.showMessageDialog(this, "Poné un nombre.");
+                continue;
+            }
+            try {
+                ctx.macros.guardar(new Macrociclo(macro.id(), macro.perfilId(), nombre.getText().trim(), objetivo.getText().trim()));
+                ctx.cambio();
+                return;
+            } catch (Exception e) {
+                Contexto.error(this, e);
+            }
+        }
+    }
+
+    private void borrarMacro() {
+        Macrociclo m = listaMacros.getSelectedValue();
+        if (m == null) {
+            JOptionPane.showMessageDialog(this, "Elegí un macrociclo en la lista.");
+            return;
+        }
+        if (JOptionPane.showConfirmDialog(this, "¿Borrar el macrociclo \"" + m.nombre()
+                + "\"? Sus mesociclos no se borran, quedan sin macrociclo.", "Borrar", JOptionPane.YES_NO_OPTION)
+                != JOptionPane.YES_OPTION) return;
+        try {
+            ctx.macros.borrar(m.id());
+            ctx.cambio();
+        } catch (Exception e) {
+            Contexto.error(this, e);
+        }
     }
 
     // ---- planes de pliometría -----------------------------------------------------------------------------------

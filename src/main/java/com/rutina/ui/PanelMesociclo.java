@@ -216,7 +216,8 @@ final class PanelMesociclo extends JPanel {
         int sel = lista.isEmpty() ? -1 : 0;
         for (int i = 0; i < lista.size(); i++) {
             Mesociclo m = lista.get(i);
-            selector.addItem("Desde " + m.inicio().format(FECHA) + " · " + m.microciclos() + " microciclos");
+            String nombre = com.rutina.service.NombreMeso.etiqueta(m);
+            selector.addItem((nombre != null ? nombre + " · desde " : "Desde ") + m.inicio().format(FECHA) + " · " + m.microciclos() + " microciclos");
             if (m.id() == idActual) sel = i;
         }
         cargando = false;
@@ -503,7 +504,7 @@ final class PanelMesociclo extends JPanel {
     private Mesociclo con(List<Bloque> bloques, Map<Long, Aproximacion> aprox) {
         return new Mesociclo(actual.id(), actual.perfilId(), actual.inicio(), actual.microciclos(), actual.potencia(),
                 actual.fuerza(), actual.variante(), actual.dias(), aprox, bloques, calentamiento.getText(),
-                auxiliares.getText(), actual.rmUsados());
+                auxiliares.getText(), actual.rmUsados(), actual.objetivo(), actual.macroId());
     }
 
     private void guardar(Mesociclo m) {
@@ -522,7 +523,7 @@ final class PanelMesociclo extends JPanel {
         Character c = v == null || v.equals("—") ? null : v.charAt(0);
         guardar(new Mesociclo(actual.id(), actual.perfilId(), actual.inicio(), actual.microciclos(), actual.potencia(),
                 actual.fuerza(), c, actual.dias(), actual.aproximaciones(), actual.bloques(), actual.calentamiento(),
-                actual.auxiliares(), actual.rmUsados()));
+                actual.auxiliares(), actual.rmUsados(), actual.objetivo(), actual.macroId()));
     }
 
     private void cambiarDias() {
@@ -542,9 +543,9 @@ final class PanelMesociclo extends JPanel {
         }
         Mesociclo m = new Mesociclo(actual.id(), actual.perfilId(), actual.inicio(), actual.microciclos(),
                 actual.potencia(), actual.fuerza(), actual.variante(), n, actual.aproximaciones(), bloques,
-                actual.calentamiento(), actual.auxiliares(), actual.rmUsados());
+                actual.calentamiento(), actual.auxiliares(), actual.rmUsados(), actual.objetivo(), actual.macroId());
         guardar(new Mesociclo(m.id(), m.perfilId(), m.inicio(), m.microciclos(), m.potencia(), m.fuerza(), m.variante(),
-                m.dias(), m.aproximaciones(), Armado.pctIguales(m, ejs), m.calentamiento(), m.auxiliares(), m.rmUsados()));
+                m.dias(), m.aproximaciones(), Armado.pctIguales(m, ejs), m.calentamiento(), m.auxiliares(), m.rmUsados(), m.objetivo(), m.macroId()));
     }
 
     private void agregar(int dia) {
@@ -616,14 +617,14 @@ final class PanelMesociclo extends JPanel {
         JFileChooser fc = new JFileChooser();
         File documentos = new File(System.getProperty("user.home"), "Documentos");
         fc.setCurrentDirectory(documentos.isDirectory() ? documentos : new File(System.getProperty("user.home")));
-        fc.setSelectedFile(new File(fc.getCurrentDirectory(), "rutina-" + actual.inicio() + ".pdf"));
+        fc.setSelectedFile(new File(fc.getCurrentDirectory(), nombreArchivo("", "pdf")));
         if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
         Path destino = fc.getSelectedFile().toPath();
         if (!destino.toString().toLowerCase().endsWith(".pdf")) destino = Path.of(destino + ".pdf");
         try {
             Mesociclo m = new Mesociclo(actual.id(), actual.perfilId(), actual.inicio(), actual.microciclos(),
                     actual.potencia(), actual.fuerza(), actual.variante(), actual.dias(), actual.aproximaciones(),
-                    actual.bloques(), calentamiento.getText(), auxiliares.getText(), Map.copyOf(rms));
+                    actual.bloques(), calentamiento.getText(), auxiliares.getText(), Map.copyOf(rms), actual.objetivo(), actual.macroId());
             var planes = Armado.planesDelMesociclo(ctx.metodologia(), m, ctx.planes.listar(ctx.perfil.id()),
                     ctx.ejercicios.listar(ctx.perfil.id()));
             ExportadorPdf.exportar(destino, ctx.perfil.nombre(), m, resultado, planes, ctx.metodologia());
@@ -635,6 +636,19 @@ final class PanelMesociclo extends JPanel {
         } catch (Exception e) {
             Contexto.error(this, e);
         }
+    }
+
+    /** Nombre estándar: AAAA-MM-DD_Macro_Objetivo_4s3d.ext (el plan lleva además el perfil adelante). */
+    private String nombreArchivo(String prefijo, String extension) {
+        String macro = "";
+        try {
+            macro = ctx.macros.listar(ctx.perfil.id()).stream()
+                    .filter(x -> actual.macroId() != null && x.id() == actual.macroId())
+                    .map(x -> x.objetivo().isBlank() ? x.nombre() : x.objetivo()).findFirst().orElse("");
+        } catch (Exception ignorada) {
+            // sin macro en el nombre; el archivo se puede renombrar en el diálogo
+        }
+        return com.rutina.service.NombreMeso.archivo(prefijo, actual, macro, extension);
     }
 
     /** Carpeta donde arrancan los diálogos de archivos: ~/Documentos si existe, si no la carpeta personal. */
@@ -651,7 +665,7 @@ final class PanelMesociclo extends JPanel {
         JFileChooser fc = new JFileChooser();
         fc.setCurrentDirectory(carpetaInicial());
         String perfil = ctx.perfil.nombre().replaceAll("[\\\\/:*?\"<>|]", "_");
-        fc.setSelectedFile(new File(fc.getCurrentDirectory(), "plan-" + perfil + "-" + actual.inicio() + ".json"));
+        fc.setSelectedFile(new File(fc.getCurrentDirectory(), nombreArchivo(perfil, "json")));
         if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
         Path destino = fc.getSelectedFile().toPath();
         if (!destino.toString().toLowerCase().endsWith(".json")) destino = Path.of(destino + ".json");
@@ -717,7 +731,7 @@ final class PanelMesociclo extends JPanel {
         if (actual == null) return;
         guardar(new Mesociclo(actual.id(), actual.perfilId(), actual.inicio(), actual.microciclos(), actual.potencia(),
                 actual.fuerza(), actual.variante(), actual.dias(), actual.aproximaciones(), actual.bloques(),
-                calentamiento.getText(), auxiliares.getText(), Map.of()));
+                calentamiento.getText(), auxiliares.getText(), Map.of(), actual.objetivo(), actual.macroId()));
         JOptionPane.showMessageDialog(this, "Listo: los kg se calculan con los 1RM actuales de cada ejercicio.");
     }
 }
