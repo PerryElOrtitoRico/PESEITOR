@@ -1,6 +1,7 @@
 package com.rutina.pdf;
 
 import com.lowagie.text.Document;
+import com.lowagie.text.Element;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Font;
 import com.lowagie.text.PageSize;
@@ -21,8 +22,10 @@ import java.util.List;
 public final class ExportadorPdfAnio {
 
     private static final Font TITULO = new Font(Font.HELVETICA, 12, Font.BOLD);
-    private static final Font NEGRITA = new Font(Font.HELVETICA, 7, Font.BOLD);
-    private static final Font NORMAL = new Font(Font.HELVETICA, 7);
+    private static final Font NEGRITA = new Font(Font.HELVETICA, 6, Font.BOLD);
+    private static final Font NORMAL = new Font(Font.HELVETICA, 6);
+    /** Columna "Mes": se combina con las semanas siguientes que la tienen vacía. */
+    private static final int COLUMNA_MES = 1;
     private static final Color FONDO = new Color(225, 225, 225);
 
     private ExportadorPdfAnio() {
@@ -39,10 +42,24 @@ public final class ExportadorPdfAnio {
             doc.add(t);
             PdfPTable tabla = new PdfPTable(cabecera.size());
             tabla.setWidthPercentage(100);
-            tabla.setHeaderRows(1);
-            for (String c : cabecera) tabla.addCell(celda(c, NEGRITA, FONDO));
-            for (String[] fila : filas) {
-                for (String c : fila) tabla.addCell(celda(c, NORMAL, null));
+            // todo el año en una hoja: la altura de fila sale de dividir el alto útil entre las filas
+            float alto = Math.min(14f, (doc.getPageSize().getHeight() - 40 - 30) / (filas.size() + 1));
+            for (String c : cabecera) tabla.addCell(celda(c, NEGRITA, FONDO, alto));
+            for (int r = 0; r < filas.size(); r++) {
+                String[] fila = filas.get(r);
+                for (int c = 0; c < fila.length; c++) {
+                    if (c == COLUMNA_MES) {
+                        if (fila[c].isEmpty()) continue; // ya lo cubre la celda combinada del mes
+                        int n = 1;
+                        while (r + n < filas.size() && filas.get(r + n)[c].isEmpty()) n++;
+                        PdfPCell mes = celda(fila[c], NEGRITA, FONDO, 0);
+                        mes.setRowspan(n);
+                        mes.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                        tabla.addCell(mes);
+                    } else {
+                        tabla.addCell(celda(fila[c], NORMAL, null, alto));
+                    }
+                }
             }
             doc.add(tabla);
             doc.close();
@@ -51,9 +68,11 @@ public final class ExportadorPdfAnio {
         }
     }
 
-    private static PdfPCell celda(String texto, Font f, Color fondo) {
+    private static PdfPCell celda(String texto, Font f, Color fondo, float alto) {
         PdfPCell c = new PdfPCell(new Phrase(texto, f));
-        c.setPadding(2);
+        c.setPadding(1);
+        c.setNoWrap(true);
+        if (alto > 0) c.setFixedHeight(alto);
         if (fondo != null) c.setBackgroundColor(fondo);
         return c;
     }
