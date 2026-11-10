@@ -35,6 +35,8 @@ public final class Database implements AutoCloseable {
                     + " bloques_json TEXT, calentamiento TEXT, auxiliares TEXT, rm_json TEXT)",
             "CREATE TABLE IF NOT EXISTS plan_pliometria (id INTEGER PRIMARY KEY AUTOINCREMENT,"
                     + " perfil_id INTEGER NOT NULL, nivel INTEGER NOT NULL, inicio TEXT NOT NULL)",
+            "CREATE TABLE IF NOT EXISTS macrociclo (id INTEGER PRIMARY KEY AUTOINCREMENT, perfil_id INTEGER NOT NULL,"
+                    + " nombre TEXT NOT NULL, objetivo TEXT NOT NULL)",
             "CREATE TABLE IF NOT EXISTS registro (mesociclo_id INTEGER PRIMARY KEY, json TEXT NOT NULL, importado TEXT NOT NULL)",
     };
 
@@ -83,11 +85,26 @@ public final class Database implements AutoCloseable {
             try (Statement st = c.createStatement()) {
                 for (String sql : ESQUEMA) st.execute(sql);
             }
+            agregarColumna(c, "mesociclo", "objetivo", "TEXT NOT NULL DEFAULT ''");
+            agregarColumna(c, "mesociclo", "macro_id", "INTEGER");
             MetodologiaRepo.inicializar(c);
             return c;
         } catch (SQLException e) {
             c.close();
             throw e;
+        }
+    }
+
+    /** Migración de bases creadas antes de que existiera la columna. */
+    private static void agregarColumna(Connection c, String tabla, String columna, String definicion) throws SQLException {
+        try (Statement st = c.createStatement();
+             java.sql.ResultSet rs = st.executeQuery("PRAGMA table_info(" + tabla + ")")) {
+            while (rs.next()) {
+                if (columna.equals(rs.getString("name"))) return;
+            }
+        }
+        try (Statement st = c.createStatement()) {
+            st.execute("ALTER TABLE " + tabla + " ADD COLUMN " + columna + " " + definicion);
         }
     }
 

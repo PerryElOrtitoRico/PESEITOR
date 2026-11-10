@@ -104,6 +104,24 @@ class PersistenciaTest {
     }
 
     @Test
+    void objetivoYMacrocicloIdaYVuelta() throws Exception {
+        var db = abrir();
+        var p = new PerfilRepo(db).crear("Franco");
+        var macros = new MacrocicloRepo(db);
+        var macro = macros.guardar(new com.rutina.model.Macrociclo(0, p.id(), "Temporada 2026", "Fuerza"));
+        var repo = new MesocicloRepo(db);
+        var mes = new Mesociclo(0, p.id(), LocalDate.of(2026, 11, 9), 4, new ParametrosTipo(0, 72),
+                new ParametrosTipo(350, 76), null, null, Map.of(), List.of(), "", "", Map.of(), "Sentadilla", macro.id());
+        var guardado = repo.guardar(mes);
+        assertEquals(guardado, repo.listar(p.id()).get(0));
+        assertEquals("Sentadilla", repo.listar(p.id()).get(0).objetivo());
+        macros.borrar(macro.id());
+        assertTrue(macros.listar(p.id()).isEmpty());
+        assertNull(repo.listar(p.id()).get(0).macroId());
+        assertEquals("Sentadilla", repo.listar(p.id()).get(0).objetivo());
+    }
+
+    @Test
     void planPliometria() throws Exception {
         var db = abrir();
         var p = new PerfilRepo(db).crear("Franco");

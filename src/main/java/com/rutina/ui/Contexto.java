@@ -6,6 +6,7 @@ import com.rutina.model.Perfil;
 import com.rutina.panel.RmAPanel;
 import com.rutina.service.datos.Database;
 import com.rutina.service.datos.EjercicioRepo;
+import com.rutina.service.datos.MacrocicloRepo;
 import com.rutina.service.datos.MesocicloRepo;
 import com.rutina.service.datos.MetodologiaRepo;
 import com.rutina.service.datos.PerfilRepo;
@@ -31,6 +32,7 @@ public final class Contexto {
     final EjercicioRepo ejercicios;
     final MesocicloRepo mesociclos;
     final PlanPlioRepo planes;
+    final MacrocicloRepo macros;
     final MetodologiaRepo metodologiaRepo;
     final RegistroRepo registros;
     private final PanelCompartido panel;
@@ -45,6 +47,7 @@ public final class Contexto {
         this.ejercicios = new EjercicioRepo(db);
         this.mesociclos = new MesocicloRepo(db);
         this.planes = new PlanPlioRepo(db);
+        this.macros = new MacrocicloRepo(db);
         this.metodologiaRepo = new MetodologiaRepo(db);
         this.registros = new RegistroRepo(db);
         this.metodologia = metodologiaRepo.cargar();

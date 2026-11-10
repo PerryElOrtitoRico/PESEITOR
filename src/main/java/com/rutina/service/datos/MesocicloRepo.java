@@ -37,7 +37,7 @@ public final class MesocicloRepo {
         List<Mesociclo> res = new ArrayList<>();
         try (PreparedStatement ps = db.conexion().prepareStatement(
                 "SELECT id, perfil_id, inicio, microciclos, pot_vol, pot_imr, fza_vol, fza_imr, variante, dias,"
-                        + " aprox_json, bloques_json, calentamiento, auxiliares, rm_json"
+                        + " aprox_json, bloques_json, calentamiento, auxiliares, rm_json, objetivo, macro_id"
                         + " FROM mesociclo WHERE perfil_id = ? ORDER BY inicio, id")) {
             ps.setLong(1, perfilId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -48,11 +48,14 @@ public final class MesocicloRepo {
                     Map<Long, Aproximacion> aprox = Database.GSON.fromJson(rs.getString(11), APROX);
                     List<Bloque> bloques = Database.GSON.fromJson(rs.getString(12), BLOQUES);
                     Map<Long, Double> rms = Database.GSON.fromJson(rs.getString(15), RMS);
+                    long macro = rs.getLong(17);
+                    Long macroONull = rs.wasNull() ? null : macro;
                     res.add(new Mesociclo(rs.getLong(1), rs.getLong(2), LocalDate.parse(rs.getString(3)), rs.getInt(4),
                             new ParametrosTipo(rs.getInt(5), rs.getInt(6)), new ParametrosTipo(rs.getInt(7), rs.getInt(8)),
                             variante == null ? null : variante.charAt(0), diasONull,
                             aprox == null ? Map.of() : aprox, bloques == null ? List.of() : bloques,
-                            rs.getString(13), rs.getString(14), rms == null ? Map.of() : rms));
+                            rs.getString(13), rs.getString(14), rms == null ? Map.of() : rms,
+                            rs.getString(16) == null ? "" : rs.getString(16), macroONull));
                 }
             }
         }
@@ -64,8 +67,8 @@ public final class MesocicloRepo {
         if (m.id() == 0) {
             try (PreparedStatement ps = db.conexion().prepareStatement(
                     "INSERT INTO mesociclo (perfil_id, inicio, microciclos, pot_vol, pot_imr, fza_vol, fza_imr, variante,"
-                            + " dias, aprox_json, bloques_json, calentamiento, auxiliares, rm_json)"
-                            + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                            + " dias, aprox_json, bloques_json, calentamiento, auxiliares, rm_json, objetivo, macro_id)"
+                            + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
                 completar(ps, m);
                 ps.executeUpdate();
                 try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -73,16 +76,16 @@ public final class MesocicloRepo {
                     long id = rs.getLong(1);
                     return new Mesociclo(id, m.perfilId(), m.inicio(), m.microciclos(), m.potencia(), m.fuerza(),
                             m.variante(), m.dias(), m.aproximaciones(), m.bloques(), m.calentamiento(),
-                            m.auxiliares(), m.rmUsados());
+                            m.auxiliares(), m.rmUsados(), m.objetivo(), m.macroId());
                 }
             }
         }
         try (PreparedStatement ps = db.conexion().prepareStatement(
                 "UPDATE mesociclo SET perfil_id = ?, inicio = ?, microciclos = ?, pot_vol = ?, pot_imr = ?, fza_vol = ?,"
                         + " fza_imr = ?, variante = ?, dias = ?, aprox_json = ?, bloques_json = ?, calentamiento = ?,"
-                        + " auxiliares = ?, rm_json = ? WHERE id = ?")) {
+                        + " auxiliares = ?, rm_json = ?, objetivo = ?, macro_id = ? WHERE id = ?")) {
             completar(ps, m);
-            ps.setLong(15, m.id());
+            ps.setLong(17, m.id());
             ps.executeUpdate();
         }
         return m;
@@ -112,5 +115,8 @@ public final class MesocicloRepo {
         ps.setString(12, m.calentamiento());
         ps.setString(13, m.auxiliares());
         ps.setString(14, Database.GSON.toJson(m.rmUsados(), RMS));
+        ps.setString(15, m.objetivo() == null ? "" : m.objetivo().trim());
+        if (m.macroId() == null) ps.setNull(16, Types.INTEGER);
+        else ps.setLong(16, m.macroId());
     }
 }
