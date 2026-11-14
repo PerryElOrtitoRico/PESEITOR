@@ -670,7 +670,9 @@ final class PanelMesociclo extends JPanel {
         Path destino = fc.getSelectedFile().toPath();
         if (!destino.toString().toLowerCase().endsWith(".json")) destino = Path.of(destino + ".json");
         try {
-            JsonRegistro.escribirPlan(destino, ArmadorPlan.armar(ctx.perfil.nombre(), actual, resultado, ctx.metodologia()));
+            var plio = Armado.planesDelMesociclo(ctx.metodologia(), actual, ctx.planes.listar(ctx.perfil.id()),
+                    ctx.ejercicios.listar(ctx.perfil.id()));
+            JsonRegistro.escribirPlan(destino, ArmadorPlan.armar(ctx.perfil.nombre(), actual, resultado, ctx.metodologia(), plio));
             JOptionPane.showMessageDialog(this, "Plan guardado en " + destino
                     + "\nPasalo al celular y cargalo en la app (Inicio → Cargar plan).");
         } catch (Exception e) {

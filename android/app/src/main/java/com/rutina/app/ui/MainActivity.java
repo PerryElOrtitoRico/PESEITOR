@@ -21,7 +21,7 @@ import com.rutina.registro.RegistroCelular;
 import java.io.IOException;
 
 /**
- * Inicio de PESEITOR: pestañas Sesión · Planes · Exportar. También recibe planes y registros que llegan por el menú
+ * Inicio de PESEITOR: pestañas Sesión · Pliometría · Planes · Exportar. También recibe planes y registros que llegan por el menú
  * Compartir o "Abrir con" de Android, sin mirar el nombre ni el tipo del archivo (decide el campo "formato").
  */
 public class MainActivity extends AppCompatActivity {
@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         pestanas.addTab(pestanas.newTab().setText("Sesión"));
+        pestanas.addTab(pestanas.newTab().setText("Pliometría"));
         pestanas.addTab(pestanas.newTab().setText("Planes"));
         pestanas.addTab(pestanas.newTab().setText("Exportar"));
 
@@ -80,9 +81,12 @@ public class MainActivity extends AppCompatActivity {
         Fragment f;
         switch (posicion) {
             case 1:
-                f = new PlanesFragment();
+                f = new PlioFragment();
                 break;
             case 2:
+                f = new PlanesFragment();
+                break;
+            case 3:
                 f = new ExportarFragment();
                 break;
             default:

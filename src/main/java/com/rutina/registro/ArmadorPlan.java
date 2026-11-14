@@ -5,6 +5,9 @@ import com.rutina.model.CeldaPlantilla;
 import com.rutina.model.Mesociclo;
 import com.rutina.model.Metodologia;
 import com.rutina.model.Zona;
+import com.rutina.pdf.PlanConDias;
+import com.rutina.service.calculo.DiaPlio;
+import com.rutina.service.calculo.Pliometria;
 import com.rutina.service.calculo.Redondeo;
 import com.rutina.service.calculo.ResultadoMesociclo;
 import com.rutina.service.calculo.ResultadoMesociclo.ResultadoBloque;
@@ -35,8 +38,28 @@ public final class ArmadorPlan {
     private ArmadorPlan() {
     }
 
-    /** mes.dias() no es null (el mesociclo ya se calculó). */
+    /** Plan sin pliometría. */
     public static PlanCelular armar(String perfil, Mesociclo mes, ResultadoMesociclo res, Metodologia m) {
+        return armar(perfil, mes, res, m, List.of());
+    }
+
+    /** Pasa un plan de pliometría al formato del celular: las 4 semanas completas, aunque alguna caiga fuera del mesociclo. */
+    static PlanPlio planPlio(PlanConDias pc) {
+        List<List<DiaPlioCelular>> semanas = new ArrayList<>();
+        for (List<DiaPlio> semana : pc.semanas()) {
+            List<DiaPlioCelular> dias = new ArrayList<>();
+            for (int d = 0; d < semana.size(); d++) {
+                DiaPlio dp = semana.get(d);
+                dias.add(new DiaPlioCelular(d + 1, dp.contactos(), dp.series(), Pliometria.SALTOS_POR_SERIE, dp.ejercicios()));
+            }
+            semanas.add(dias);
+        }
+        return new PlanPlio(pc.plan().nivel(), pc.plan().inicio().toString(), semanas);
+    }
+
+    /** mes.dias() no es null (el mesociclo ya se calculó). */
+    public static PlanCelular armar(String perfil, Mesociclo mes, ResultadoMesociclo res, Metodologia m,
+                                    List<PlanConDias> pliometria) {
         int dias = mes.dias();
         List<ResultadoBloque> bloques = res.bloques().stream()
                 .sorted(Comparator.comparingInt((ResultadoBloque b) -> b.bloque().dia())
@@ -54,7 +77,7 @@ public final class ArmadorPlan {
             }
         }
         return new PlanCelular(PlanCelular.FORMATO, PlanCelular.VERSION, perfil, mes.id(), mes.inicio().toString(),
-                mes.microciclos(), dias, List.copyOf(sesiones));
+                mes.microciclos(), dias, List.copyOf(sesiones), pliometria.stream().map(ArmadorPlan::planPlio).toList());
     }
 
     private static EjercicioPlan ejercicio(Mesociclo mes, ResultadoBloque rb, SemanaBloque semana, double inc) {

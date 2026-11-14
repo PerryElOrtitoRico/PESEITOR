@@ -105,7 +105,36 @@ public final class JsonRegistro {
             sesiones.add(new SesionRegistro(s.microciclo(), s.dia(), s.fecha(), s.descanso(), s.sensacionFinal(),
                     List.copyOf(ejercicios), s.duracionMin()));
         }
-        return new RegistroCelular(r.formato(), r.version(), r.perfil(), r.mesocicloId(), List.copyOf(sesiones));
+        return new RegistroCelular(r.formato(), r.version(), r.perfil(), r.mesocicloId(), List.copyOf(sesiones),
+                validarPliometria(r.pliometria()));
+    }
+
+    private static List<SesionPlioRegistro> validarPliometria(List<SesionPlioRegistro> crudas) {
+        List<SesionPlioRegistro> res = new ArrayList<>();
+        Set<String> vistas = new HashSet<>();
+        for (SesionPlioRegistro s : crudas) {
+            if (s == null) throw new IllegalArgumentException("Hay una sesión de pliometría vacía (null) en el registro");
+            String donde = "pliometría semana " + s.semana() + ", día " + s.dia();
+            if (s.inicio() == null) throw new IllegalArgumentException(donde + ": falta el inicio del plan");
+            if (s.semana() < 1) throw new IllegalArgumentException(donde + ": la semana tiene que ser 1 o más");
+            if (s.dia() < 1) throw new IllegalArgumentException(donde + ": el día tiene que ser 1 o más");
+            if (s.fecha() == null) throw new IllegalArgumentException(donde + ": falta la fecha");
+            try {
+                LocalDate.parse(s.fecha());
+            } catch (DateTimeParseException e) {
+                throw new IllegalArgumentException(donde + ": fecha inválida \"" + s.fecha() + "\" (formato AAAA-MM-DD)");
+            }
+            enRango(s.duracionMin(), 1, 600, donde + ": duración");
+            if (!vistas.add(s.clave())) throw new IllegalArgumentException(donde + ": está repetida en el registro");
+            List<EjercicioPlioRegistro> ejercicios = new ArrayList<>();
+            for (EjercicioPlioRegistro e : s.ejercicios()) {
+                if (e == null) throw new IllegalArgumentException(donde + ": hay un ejercicio vacío (null)");
+                if (e.numero() < 1) throw new IllegalArgumentException(donde + ": el número de ejercicio tiene que ser 1 o más");
+                ejercicios.add(new EjercicioPlioRegistro(e.numero(), limpiarNota(e.nota(), donde + ", ejercicio " + e.numero())));
+            }
+            res.add(new SesionPlioRegistro(s.inicio(), s.semana(), s.dia(), s.fecha(), s.duracionMin(), ejercicios));
+        }
+        return List.copyOf(res);
     }
 
     public static RegistroCelular leerRegistro(Path archivo) throws IOException {

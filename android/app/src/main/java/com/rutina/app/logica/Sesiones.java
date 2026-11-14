@@ -75,7 +75,7 @@ public final class Sesiones {
         }
         sesiones.add(limpia);
         sesiones.sort(Comparator.comparingInt(SesionRegistro::microciclo).thenComparingInt(SesionRegistro::dia));
-        return new RegistroCelular(r.formato(), r.version(), r.perfil(), r.mesocicloId(), sesiones);
+        return r.conSesiones(sesiones);
     }
 
     /** Pista gris de la casilla: "3.3.3 · 120/127,5", "12.12" o "" (lista vacía). */

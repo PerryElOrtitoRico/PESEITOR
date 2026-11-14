@@ -123,5 +123,11 @@
         }
       ]
     }
+  ],
+  "pliometria": [
+    { "nivel": 1, "inicio": "2026-10-26", "semanas": [
+      [ { "dia": 1, "contactos": 120, "series": 2, "saltosPorSerie": 10,
+          "ejercicios": ["Salto al cajón", "Skipping", "Salto vertical", "Saltos laterales", "Sentadilla con salto", "Zancadas con salto"] } ]
+    ] }
   ]
 }

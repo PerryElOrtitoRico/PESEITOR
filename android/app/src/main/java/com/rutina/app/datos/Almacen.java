@@ -237,7 +237,11 @@ public class Almacen {
 
     /** El cronómetro de esa sesión; {@code Crono.nuevo()} si no hay. */
     public EstadoCrono crono(long id, int micro, int dia) {
-        String clave = id + "-" + micro + "-" + dia;
+        return crono(id + "-" + micro + "-" + dia);
+    }
+
+    /** El cronómetro con esa clave (las de otra clase de sesión, como la pliometría, empiezan con "<id>-"). */
+    public EstadoCrono crono(String clave) {
         JsonObject cronos = leerPreferencias().getAsJsonObject("cronos");
         if (cronos == null || !cronos.has(clave)) return Crono.nuevo();
         JsonObject c = cronos.getAsJsonObject(clave);
@@ -246,7 +250,10 @@ public class Almacen {
     }
 
     public void crono(long id, int micro, int dia, EstadoCrono estado) throws IOException {
-        String clave = id + "-" + micro + "-" + dia;
+        crono(id + "-" + micro + "-" + dia, estado);
+    }
+
+    public void crono(String clave, EstadoCrono estado) throws IOException {
         JsonObject o = leerPreferencias();
         JsonObject cronos = o.has("cronos") ? o.getAsJsonObject("cronos") : new JsonObject();
         JsonObject c = new JsonObject();

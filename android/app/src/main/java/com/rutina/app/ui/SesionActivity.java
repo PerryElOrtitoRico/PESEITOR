@@ -294,7 +294,7 @@ public class SesionActivity extends AppCompatActivity {
             if (s.microciclo() != micro || s.dia() != dia) resto.add(s);
         }
         try {
-            App.almacen().guardarRegistro(new RegistroCelular(r.formato(), r.version(), r.perfil(), r.mesocicloId(), resto));
+            App.almacen().guardarRegistro(r.conSesiones(resto));
             crono = Crono.nuevo();
             App.almacen().crono(plan.mesocicloId(), micro, dia, crono);
             quitarNotificacion();

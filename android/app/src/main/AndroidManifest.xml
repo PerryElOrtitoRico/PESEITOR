@@ -56,6 +56,12 @@
             android:launchMode="singleTop"
             android:parentActivityName=".ui.MainActivity" />
 
+        <activity
+            android:name=".ui.PlioActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:parentActivityName=".ui.MainActivity" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.archivos"
