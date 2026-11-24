@@ -118,6 +118,9 @@ final class PanelMesociclo extends JPanel {
         arriba.add(variante);
         arriba.add(new JLabel("  Días por microciclo:"));
         arriba.add(dias);
+        JButton rearmar = new JButton("Rearmar plan");
+        rearmar.setToolTipText("Vuelve a calcular el plan con las tablas guardadas en Plantillas y los ejercicios actuales");
+        rearmar.addActionListener(e -> rearmar());
         JButton exportar = new JButton("Exportar PDF");
         exportar.addActionListener(e -> exportar());
         JButton recalcular = new JButton("Recalcular con 1RM actuales");
@@ -128,6 +131,7 @@ final class PanelMesociclo extends JPanel {
         JButton importar = new JButton("Importar registro");
         importar.setToolTipText("Lee el registro exportado desde el celular y lo compara con la planilla");
         importar.addActionListener(e -> importarRegistro());
+        arriba.add(rearmar);
         arriba.add(exportar);
         arriba.add(alCelular);
         arriba.add(importar);
@@ -727,6 +731,17 @@ final class PanelMesociclo extends JPanel {
         } catch (Exception ignorada) {
             // la importación ya salió bien
         }
+    }
+
+    /** Relee de la base las tablas del método y los ejercicios, y vuelve a calcular todas las pestañas. */
+    private void rearmar() {
+        try {
+            ctx.recargarMetodologia();
+        } catch (Exception e) {
+            Contexto.error(this, e);
+            return;
+        }
+        ctx.cambio();
     }
 
     private void recalcularRm() {
