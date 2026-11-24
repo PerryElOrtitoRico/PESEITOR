@@ -96,7 +96,7 @@ final class PanelPlantillas extends JPanel {
             return;
         }
         try {
-            Metodologia nueva = new Metodologia(m.variantes(), m.diaPct(), m.ref(), m.repsPorSerie(), m.plantillas(),
+            Metodologia nueva = new Metodologia(m.variantes(), m.diaPct(), m.diaDeltaImr(), m.ref(), m.repsPorSerie(), m.plantillas(),
                     m.volPlio(), OpcionesRedondeo.valorDe(incremento.getSelectedIndex()));
             ctx.metodologiaRepo.guardar(nueva);
             ctx.recargarMetodologia();
@@ -217,16 +217,23 @@ final class PanelPlantillas extends JPanel {
 
     private JScrollPane tablaDias() {
         List<Integer> claves = new ArrayList<>(m.diaPct().keySet());
-        return tabla(claves.size(), new String[]{"Día 1 %", "Día 2 %", "Día 3 %", "Día 4 %", "Día 5 %"},
-                f -> claves.get(f) + " días", new Celdas() {
+        String[] cols = {"Vol% 1", "Vol% 2", "Vol% 3", "Vol% 4", "Vol% 5", "ΔIMR 1", "ΔIMR 2", "ΔIMR 3", "ΔIMR 4", "ΔIMR 5"};
+        return tabla(claves.size(), cols, f -> claves.get(f) + " días", new Celdas() {
                     public Object leer(int f, int c) {
                         double[] v = m.diaPct().get(claves.get(f));
-                        return c < v.length ? fmt(v[c] * 100) : null;
+                        int i = c % 5;
+                        if (i >= v.length) return null;
+                        return c < 5 ? fmt(v[i] * 100) : String.valueOf(m.diaDeltaImr().get(claves.get(f))[i]);
                     }
 
                     public boolean escribir(int f, int c, String s) {
                         Double d = num(s);
-                        if (d == null || d < 0) return false;
+                        if (d == null) return false;
+                        if (c >= 5) {
+                            m.diaDeltaImr().get(claves.get(f))[c - 5] = (int) Math.round(d);
+                            return true;
+                        }
+                        if (d < 0) return false;
                         m.diaPct().get(claves.get(f))[c] = d / 100;
                         return true;
                     }

@@ -26,7 +26,7 @@ public final class DatosIniciales {
 
     public static Metodologia metodologia() {
         // redondeo de a 2,5 kg: los discos más chicos de un gimnasio común son de 1,25 kg por lado
-        return new Metodologia(variantes(), diaPct(), ref(), repsPorSerie(), plantillas(), volPlio(), 2.5);
+        return new Metodologia(variantes(), diaPct(), diaDeltaImr(), ref(), repsPorSerie(), plantillas(), volPlio(), 2.5);
     }
 
     // Hoja Calculos: % de volumen y ΔIMR por microciclo
@@ -51,6 +51,13 @@ public final class DatosIniciales {
         d.put(3, new double[]{0.35, 0.45, 0.20});
         d.put(4, new double[]{0.26, 0.24, 0.28, 0.22});
         d.put(5, new double[]{0.20, 0.15, 0.30, 0.10, 0.25});
+        return d;
+    }
+
+    /** Sin variación: cada día con el IMR del microciclo, hasta que se ajuste en Plantillas → Días. */
+    static Map<Integer, int[]> diaDeltaImr() {
+        Map<Integer, int[]> d = new LinkedHashMap<>();
+        for (int dias = 3; dias <= 5; dias++) d.put(dias, new int[dias]);
         return d;
     }
 

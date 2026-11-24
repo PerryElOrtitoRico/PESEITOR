@@ -79,7 +79,7 @@ public final class CalculadoraMesociclo {
             }
             List<PlanMicro> planes = DistribucionVolumen.porMicrociclo(m, p, n, mes.variante());
             avisarPctBolsa(tipo, bloques, idxs, avisos);
-            calcularCompleja(m, tipo, dias, planes, bloques, ejs, idxs, semanas, contadores, planificado, real);
+            calcularCompleja(m, tipo, dias, planes, bloques, ejs, idxs, semanas, contadores, planificado, real, avisos);
         }
 
         calcularPlantillas(m, n, bloques, ejs, aprox, semanas, avisos);
@@ -102,30 +102,38 @@ public final class CalculadoraMesociclo {
     private static void calcularCompleja(Metodologia m, Tipo tipo, int dias, List<PlanMicro> planes,
                                          List<Bloque> bloques, List<Ejercicio> ejs, List<Integer> idxs,
                                          List<List<SemanaBloque>> semanas, List<Contador> contadores,
-                                         List<PuntoGrafico> planificado, List<PuntoGrafico> real) {
+                                         List<PuntoGrafico> planificado, List<PuntoGrafico> real,
+                                         List<String> avisos) {
         Set<Integer> diasConTipo = new TreeSet<>();
         for (int k : idxs) diasConTipo.add(bloques.get(k).dia());
         double[] pesos = DistribucionVolumen.pesosDias(m, dias, diasConTipo);
+        int[] deltas = m.diaDeltaImr().getOrDefault(dias, new int[dias]);
 
         for (int i = 0; i < planes.size(); i++) {
             PlanMicro plan = planes.get(i);
-            int[] zonas = DistribucionZonas.repsPorZona(m, plan.volumen(), plan.imr());
             int[][] repsBloqueZona = new int[bloques.size()][ZONAS.length];
-            int[] planDia = new int[dias];
+            int[] planDia = DistribucionZonas.repartirEnDias(plan.volumen(), pesos);
             int[] sinDia = new int[dias];
 
-            for (int z = 0; z < ZONAS.length; z++) {
-                int[] porDia = DistribucionZonas.repartirEnDias(zonas[z], pesos);
-                for (int d = 0; d < dias; d++) {
-                    planDia[d] += porDia[d];
-                    if (porDia[d] == 0) continue;
+            // Cada día reparte su volumen en zonas con su propio IMR (IMR del microciclo + ΔIMR del día),
+            // así el día de pico no es necesariamente el de más volumen
+            for (int d = 0; d < dias; d++) {
+                if (planDia[d] == 0) continue;
+                int imrDia = DistribucionVolumen.imrEnTabla(m, plan.imr() + deltas[d]);
+                if (imrDia != plan.imr() + deltas[d]) {
+                    avisos.add(nombre(tipo) + ", microciclo " + (i + 1) + ", día " + (d + 1) + ": el IMR "
+                            + (plan.imr() + deltas[d]) + " % queda fuera de la tabla, se usa " + imrDia + " %.");
+                }
+                int[] zonas = DistribucionZonas.repsPorZona(m, planDia[d], imrDia);
+                for (int z = 0; z < ZONAS.length; z++) {
+                    if (zonas[z] == 0) continue;
                     List<Participante> ps = new ArrayList<>();
                     for (int k : idxs) {
                         if (bloques.get(k).dia() == d + 1) {
                             ps.add(new Participante(k, bloques.get(k).pctBolsa(), ejs.get(k).techoPct()));
                         }
                     }
-                    ResultadoReparto rr = RepartoEjercicios.repartir(porDia[d], ZONAS[z], ps);
+                    ResultadoReparto rr = RepartoEjercicios.repartir(zonas[z], ZONAS[z], ps);
                     sinDia[d] += rr.sinAsignar();
                     for (Map.Entry<Long, Integer> en : rr.porEjercicio().entrySet()) {
                         repsBloqueZona[en.getKey().intValue()][z] += en.getValue();

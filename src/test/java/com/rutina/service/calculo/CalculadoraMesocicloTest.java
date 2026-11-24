@@ -154,4 +154,29 @@ class CalculadoraMesocicloTest {
         assertEquals("4x12", r.bloques().get(0).semanas().get(0).celda().texto());
         assertEquals("4x10", r.bloques().get(0).semanas().get(1).celda().texto());
     }
+
+    private static double imrReal(ResultadoMesociclo.SemanaBloque sem) {
+        double reps = 0, pct = 0;
+        for (var en : sem.seriesPorZona().entrySet()) {
+            int r = en.getValue().get(0).stream().mapToInt(Integer::intValue).sum();
+            reps += r;
+            pct += r * en.getKey().pct();
+        }
+        return pct / reps;
+    }
+
+    @Test
+    void elDiaDePicoLlevaMasIntensidadAunqueTengaMenosVolumen() throws Exception {
+        var deltas = new java.util.LinkedHashMap<>(M.diaDeltaImr());
+        deltas.put(3, new int[]{0, -4, 5}); // día 2: 45 % del volumen; día 3: 20 % pero pico
+        var m = new Metodologia(M.variantes(), M.diaPct(), deltas, M.ref(), M.repsPorSerie(), M.plantillas(),
+                M.volPlio(), M.incrementoKg());
+        var r = CalculadoraMesociclo.calcular(m, mesociclo(new ParametrosTipo(0, 72), 'A',
+                        List.of(new Bloque(2, 1, 1L, 100), new Bloque(3, 1, 2L, 100))),
+                Map.of(1L, fuerza(1, 100.0, 100), 2L, fuerza(2, 100.0, 100)));
+        var dia2 = r.bloques().get(0).semanas().get(0);
+        var dia3 = r.bloques().get(1).semanas().get(0);
+        assertTrue(dia2.volumen() > dia3.volumen());
+        assertTrue(imrReal(dia3) > imrReal(dia2) + 5, imrReal(dia2) + " vs " + imrReal(dia3));
+    }
 }

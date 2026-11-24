@@ -37,10 +37,19 @@ class PersistenciaTest {
     }
 
     @Test
+    void deltaImrDeLosDiasSeGuarda() throws Exception {
+        var repo = new MetodologiaRepo(abrir());
+        var m = repo.cargar();
+        m.diaDeltaImr().get(3)[1] = -4;
+        repo.guardar(m);
+        assertArrayEquals(new int[]{0, -4, 0}, repo.cargar().diaDeltaImr().get(3));
+    }
+
+    @Test
     void metodologiaSeGuardaYRestaura() throws Exception {
         var repo = new MetodologiaRepo(abrir());
         var m = repo.cargar();
-        repo.guardar(new com.rutina.model.Metodologia(m.variantes(), m.diaPct(), m.ref(), m.repsPorSerie(),
+        repo.guardar(new com.rutina.model.Metodologia(m.variantes(), m.diaPct(), m.diaDeltaImr(), m.ref(), m.repsPorSerie(),
                 m.plantillas(), m.volPlio(), 1.0));
         assertEquals(1.0, repo.cargar().incrementoKg());
         repo.restaurar();

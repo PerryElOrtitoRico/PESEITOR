@@ -52,6 +52,11 @@ public final class DistribucionVolumen {
         return res;
     }
 
+    /** El IMR recortado al rango de la tabla de distribución. */
+    public static int imrEnTabla(Metodologia m, int imr) {
+        return Math.max(minimo(m), Math.min(maximo(m), imr));
+    }
+
     private static int minimo(Metodologia m) {
         return m.ref().keySet().stream().mapToInt(Integer::intValue).min().orElse(0);
     }

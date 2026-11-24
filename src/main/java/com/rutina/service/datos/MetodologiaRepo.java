@@ -29,7 +29,10 @@ public final class MetodologiaRepo {
         try (Statement st = db.conexion().createStatement();
              ResultSet rs = st.executeQuery("SELECT json FROM metodologia WHERE id = 1")) {
             if (!rs.next()) return DatosIniciales.metodologia();
-            return Database.GSON.fromJson(rs.getString(1), Metodologia.class);
+            Metodologia m = Database.GSON.fromJson(rs.getString(1), Metodologia.class);
+            if (m.diaDeltaImr() != null) return m;
+            return new Metodologia(m.variantes(), m.diaPct(), DatosIniciales.diaDeltaImr(), m.ref(), m.repsPorSerie(),
+                    m.plantillas(), m.volPlio(), m.incrementoKg());
         }
     }
 
