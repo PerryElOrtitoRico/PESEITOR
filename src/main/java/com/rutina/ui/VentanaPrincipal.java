@@ -29,11 +29,11 @@ public final class VentanaPrincipal extends JFrame {
         super("PESEITOR — " + ctx.perfil.nombre());
         setIconImages(iconos());
         panelMesociclo = new PanelMesociclo(ctx);
-        pestanas.addTab("Ejercicios", new PanelEjercicios(ctx));
-        pestanas.addTab("Plantillas", new PanelPlantillas(ctx));
         pestanas.addTab("Macrociclo", new PanelMacrociclo(ctx, this::abrirMesociclo));
         pestanas.addTab("Mesociclo", panelMesociclo);
         pestanas.addTab("Progreso", new PanelProgreso(ctx));
+        pestanas.addTab("Ejercicios", new PanelEjercicios(ctx));
+        pestanas.addTab("Plantillas", new PanelPlantillas(ctx));
         setContentPane(pestanas);
 
         JMenuBar barra = new JMenuBar();

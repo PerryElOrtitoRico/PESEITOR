@@ -26,7 +26,6 @@ import com.rutina.service.calculo.GeneradorSeries;
 import com.rutina.service.calculo.ParametrosInvalidosException;
 import com.rutina.service.calculo.Redondeo;
 import com.rutina.service.calculo.ResultadoMesociclo;
-import com.rutina.service.calculo.ResultadoMesociclo.Contador;
 import com.rutina.service.calculo.ResultadoMesociclo.ResultadoBloque;
 import com.rutina.service.calculo.ResultadoMesociclo.SemanaBloque;
 
@@ -69,7 +68,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** Pestaña Mesociclo: grilla de días y ejercicios, series calculadas, contadores, gráfico, registro y exportación. */
+/** Pestaña Mesociclo: grilla de días y ejercicios arriba; gráfico, registro y exportación. */
 final class PanelMesociclo extends JPanel {
 
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -79,13 +78,6 @@ final class PanelMesociclo extends JPanel {
     private final JComboBox<String> variante = new JComboBox<>();
     private final JComboBox<String> dias = new JComboBox<>(new String[]{"—", "3", "4", "5"});
     private final JPanel grilla = new JPanel();
-    private final DefaultTableModel contadores = new DefaultTableModel(
-            new Object[]{"Tipo", "Micro", "Día", "Teoría", "Planilla", "Diferencia", "Sin asignar"}, 0) {
-        @Override
-        public boolean isCellEditable(int r, int c) {
-            return false;
-        }
-    };
     private final JPanel grafico = new JPanel(new BorderLayout());
     /** Planilla (lo planificado) contra Entrenado (lo anotado en el celular), una fila por sesión y tipo. */
     private final DefaultTableModel registro = new DefaultTableModel(
@@ -148,24 +140,23 @@ final class PanelMesociclo extends JPanel {
             if (!cargando) cambiarDias();
         });
 
-        JTabbedPane derecha = new JTabbedPane();
-        derecha.addTab("Contadores", new JScrollPane(new JTable(contadores)));
-        derecha.addTab("Gráfico", grafico);
+        JTabbedPane abajo = new JTabbedPane();
+        abajo.addTab("Gráfico", grafico);
         JTable tablaRegistro = new JTable(registro);
         tablaRegistro.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         tablaRegistro.getColumnModel().getColumn(3).setPreferredWidth(220);
         tablaRegistro.getColumnModel().getColumn(4).setPreferredWidth(110);
         tablaRegistro.getColumnModel().getColumn(2).setPreferredWidth(90);
         tablaRegistro.getColumnModel().getColumn(12).setPreferredWidth(420);
-        derecha.addTab("Registro", new JScrollPane(tablaRegistro));
+        abajo.addTab("Registro", new JScrollPane(tablaRegistro));
         pliometria.setLayout(new BoxLayout(pliometria, BoxLayout.Y_AXIS));
         JPanel envolturaPlio = new JPanel(new BorderLayout());
         envolturaPlio.add(pliometria, BorderLayout.NORTH);
-        derecha.addTab("Pliometría", new JScrollPane(envolturaPlio));
+        abajo.addTab("Pliometría", new JScrollPane(envolturaPlio));
         JPanel textos = new JPanel(new GridLayout(2, 1, 4, 4));
         textos.add(conTitulo(calentamiento, "Calentamiento"));
         textos.add(conTitulo(auxiliares, "Auxiliares"));
-        derecha.addTab("Calentamiento y auxiliares", textos);
+        abajo.addTab("Calentamiento y auxiliares", textos);
         FocusAdapter guardarTextos = new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) {
@@ -178,8 +169,8 @@ final class PanelMesociclo extends JPanel {
         calentamiento.addFocusListener(guardarTextos);
         auxiliares.addFocusListener(guardarTextos);
 
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(grilla), derecha);
-        split.setResizeWeight(0.7);
+        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(grilla), abajo);
+        split.setResizeWeight(0.6);
         add(split, BorderLayout.CENTER);
         avisos.setForeground(new Color(170, 60, 0));
         add(avisos, BorderLayout.SOUTH);
@@ -254,7 +245,6 @@ final class PanelMesociclo extends JPanel {
 
     private void recalcular() {
         resultado = null;
-        contadores.setRowCount(0);
         grafico.removeAll();
         if (actual == null) {
             avisos.setText(" Creá un mesociclo en la pestaña Macrociclo.");
@@ -264,11 +254,6 @@ final class PanelMesociclo extends JPanel {
             try {
                 resultado = CalculadoraMesociclo.calcular(ctx.metodologia(), actual, ejs);
                 avisos.setText(resultado.avisos().isEmpty() ? " " : " ⚠ " + String.join("   ⚠ ", resultado.avisos()));
-                for (Contador c : resultado.contadores()) {
-                    contadores.addRow(new Object[]{PanelEjercicios.titulo(c.tipo()), c.microciclo(),
-                            c.dia() == 0 ? "sin ejercicios" : c.dia(), c.planificado(), c.asignado(),
-                            c.asignado() - c.planificado(), c.sinAsignar()});
-                }
                 grafico.add(Graficos.volumenIntensidad(resultado.planificado(), resultado.real(), "Micro "));
             } catch (ParametrosInvalidosException e) {
                 avisos.setText(" ⚠ " + e.getMessage());
