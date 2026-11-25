@@ -114,15 +114,17 @@ public final class CalculadoraMesociclo {
             int[][] repsBloqueZona = new int[bloques.size()][ZONAS.length];
             int[] planDia = DistribucionZonas.repartirEnDias(plan.volumen(), pesos);
             int[] sinDia = new int[dias];
+            int[] imrs = DistribucionVolumen.imrDias(m, plan.imr(), pesos, deltas);
 
             // Cada día reparte su volumen en zonas con su propio IMR (IMR del microciclo + ΔIMR del día),
             // así el día de pico no es necesariamente el de más volumen
             for (int d = 0; d < dias; d++) {
                 if (planDia[d] == 0) continue;
-                int imrDia = DistribucionVolumen.imrEnTabla(m, plan.imr() + deltas[d]);
-                if (imrDia != plan.imr() + deltas[d]) {
+                int imrDia = imrs[d];
+                if (DistribucionVolumen.imrEnTabla(m, plan.imr() + deltas[d]) != plan.imr() + deltas[d]) {
                     avisos.add(nombre(tipo) + ", microciclo " + (i + 1) + ", día " + (d + 1) + ": el IMR "
-                            + (plan.imr() + deltas[d]) + " % queda fuera de la tabla, se usa " + imrDia + " %.");
+                            + (plan.imr() + deltas[d]) + " % queda fuera de la tabla, se usa " + imrDia
+                            + " % y los otros días compensan.");
                 }
                 int[] zonas = DistribucionZonas.repsPorZona(m, planDia[d], imrDia);
                 for (int z = 0; z < ZONAS.length; z++) {

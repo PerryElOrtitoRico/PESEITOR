@@ -7,6 +7,7 @@ import com.rutina.model.Plantilla;
 import com.rutina.model.Tipo;
 import com.rutina.model.VarianteMicro;
 import com.rutina.model.Zona;
+import com.rutina.service.calculo.DistribucionVolumen;
 import com.rutina.service.calculo.OpcionesRedondeo;
 
 import javax.swing.JButton;
@@ -93,6 +94,19 @@ final class PanelPlantillas extends JPanel {
         if (!problemas.isEmpty()) {
             JOptionPane.showMessageDialog(this, String.join("\n", problemas) + "\nCorregilo antes de guardar.",
                     "No se guardó", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        List<String> desvios = new ArrayList<>();
+        m.diaPct().forEach((k, v) -> {
+            double s = DistribucionVolumen.desvioImrDias(v, m.diaDeltaImr().get(k));
+            if (Math.abs(s) > 0.01) {
+                desvios.add("Con " + k + " días, Σ Vol% × ΔIMR = " + fmt(s) + ": la semana queda " + fmt(Math.abs(s))
+                        + " puntos de IMR " + (s < 0 ? "por debajo" : "por encima") + " del microciclo.");
+            }
+        });
+        if (!desvios.isEmpty() && JOptionPane.showConfirmDialog(this, String.join("\n", desvios)
+                        + "\nPara que se compensen, Σ Vol% × ΔIMR tiene que dar 0.\n¿Guardar igual?",
+                "ΔIMR de los días", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
             return;
         }
         try {

@@ -51,4 +51,28 @@ class DistribucionVolumenTest {
     void sinDiasTodoCero() {
         assertArrayEquals(new double[]{0, 0, 0}, DistribucionVolumen.pesosDias(M, 3, Set.of()), 1e-9);
     }
+
+    @Test
+    void desvioImrDias() {
+        double[] pct = {0.35, 0.45, 0.20};
+        assertEquals(0, DistribucionVolumen.desvioImrDias(pct, new int[]{-1, -1, 4}), 1e-9);
+        assertEquals(-2.5, DistribucionVolumen.desvioImrDias(pct, new int[]{-3, -5, 4}), 1e-9);
+    }
+
+    @Test
+    void imrDiasRecortaYCompensa() {
+        var m = com.rutina.service.datos.DatosIniciales.metodologia();
+        double[] w = {0.35, 0.45, 0.20};
+        assertArrayEquals(new int[]{71, 71, 76}, DistribucionVolumen.imrDias(m, 72, w, new int[]{-1, -1, 4}));
+        // 77 + 4 = 81: el día 3 queda en 80 y el promedio se mantiene en 77 lo más cerca posible
+        int[] r = DistribucionVolumen.imrDias(m, 77, w, new int[]{-1, -1, 4});
+        assertEquals(80, r[2]);
+        double prom = w[0] * r[0] + w[1] * r[1] + w[2] * r[2];
+        assertEquals(77, prom, 0.2);
+        assertArrayEquals(new int[]{77, 76, 80}, r);
+        // por abajo: 61 - 3 = 58 queda en 60 y los otros bajan
+        int[] b = DistribucionVolumen.imrDias(m, 61, w, new int[]{-3, 2, 1});
+        assertEquals(60, b[0]);
+        assertEquals(61 + (0.35 * -3 + 0.45 * 2 + 0.20 * 1), w[0] * b[0] + w[1] * b[1] + w[2] * b[2], 0.25);
+    }
 }

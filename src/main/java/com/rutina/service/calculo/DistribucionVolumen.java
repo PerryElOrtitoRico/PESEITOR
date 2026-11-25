@@ -52,6 +52,46 @@ public final class DistribucionVolumen {
         return res;
     }
 
+    /** Σ Vol% × ΔIMR en puntos de IMR: 0 si los días se compensan y la semana queda en el IMR del microciclo. */
+    public static double desvioImrDias(double[] pesos, int[] deltas) {
+        double s = 0;
+        for (int d = 0; d < pesos.length; d++) s += pesos[d] * deltas[d];
+        return s;
+    }
+
+    /**
+     * IMR de cada día: el del microciclo más su ΔIMR. Si un día se sale de la tabla queda en el límite, y los
+     * demás días con el tipo suben o bajan de a un punto, repartido, para que el promedio ponderado no cambie.
+     */
+    public static int[] imrDias(Metodologia m, int imr, double[] pesos, int[] deltas) {
+        int min = minimo(m), max = maximo(m);
+        int[] res = new int[pesos.length];
+        boolean[] recortado = new boolean[pesos.length];
+        double falta = 0;
+        for (int d = 0; d < pesos.length; d++) {
+            int crudo = imr + deltas[d];
+            res[d] = Math.max(min, Math.min(max, crudo));
+            recortado[d] = res[d] != crudo;
+            falta += pesos[d] * (crudo - res[d]);
+        }
+        int[] ajuste = new int[pesos.length];
+        while (true) {
+            int paso = falta > 0 ? 1 : -1;
+            int elegido = -1;
+            for (int d = 0; d < pesos.length; d++) {
+                if (pesos[d] <= 0 || recortado[d] || res[d] + paso < min || res[d] + paso > max) continue;
+                if (Math.abs(falta - paso * pesos[d]) >= Math.abs(falta) - 1e-9) continue;
+                // el día menos tocado hasta ahora; a igualdad, el de más volumen
+                if (elegido < 0 || Math.abs(ajuste[d]) < Math.abs(ajuste[elegido])
+                        || (Math.abs(ajuste[d]) == Math.abs(ajuste[elegido]) && pesos[d] > pesos[elegido])) elegido = d;
+            }
+            if (elegido < 0) return res;
+            res[elegido] += paso;
+            ajuste[elegido] += paso;
+            falta -= paso * pesos[elegido];
+        }
+    }
+
     /** El IMR recortado al rango de la tabla de distribución. */
     public static int imrEnTabla(Metodologia m, int imr) {
         return Math.max(minimo(m), Math.min(maximo(m), imr));
